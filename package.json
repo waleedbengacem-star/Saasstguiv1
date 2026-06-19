@@ -4,11 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "dev:staging": "node -e \"const fs = require('fs'); if (fs.existsSync('.env.staging')) { fs.copyFileSync('.env.staging', '.env.development.local'); console.log('Copied .env.staging to .env.development.local for staging dev'); }\" && next dev --webpack",
-    "build": "prisma generate && next build --webpack",
-    "build:staging": "node -e \"const fs = require('fs'); if (fs.existsSync('.env.staging')) { fs.copyFileSync('.env.staging', '.env.production.local'); console.log('Copied .env.staging to .env.production.local for staging build'); }\" && prisma generate && next build --webpack",
-    "zip:staging": "node scripts/zip-aws-staging.js",
-    "postinstall": "prisma generate && next build --webpack",
+    "build": "next build --webpack",
+    "postinstall": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
