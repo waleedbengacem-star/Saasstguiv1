@@ -25,6 +25,7 @@ const publicRoutes = [
   '/api/auth/verify-session',
   '/api/webhooks',
   '/api/bookings/engine',
+  '/api/debug/test-connection',
 ];
 
 export async function middleware(request: NextRequest) {

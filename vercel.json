@@ -4,5 +4,13 @@
       "path": "/api/cron/sync-bookings?secret=airbetter_cron_secret_key_99",
       "schedule": "0 0 * * *"
     }
-  ]
+  ],
+  "experimentalServices": {
+    "web": {
+      "type": "web",
+      "entrypoint": ".",
+      "routePrefix": "/",
+      "framework": "nextjs"
+    }
+  }
 }
