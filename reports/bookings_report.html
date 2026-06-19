@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Audit Report: Bookings & Integrations</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      
+      --status-critical: #ef4444;
+      --status-critical-bg: #fef2f2;
+      --status-critical-border: #fca5a5;
+      
+      --status-warning: #f59e0b;
+      --status-warning-bg: #fffbeb;
+      --status-warning-border: #fcd34d;
+      
+      --status-info: #6366f1;
+      --status-info-bg: #eef2ff;
+      --status-info-border: #c7d2fe;
+      
+      --status-success: #10b981;
+      --status-success-bg: #ecfdf5;
+      --status-success-border: #6ee7b7;
+
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.03), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 2.5rem 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .header-left h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+
+    .header-left p {
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .meta-tag {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      background-color: var(--accent-light);
+      color: var(--accent);
+      border: 1px solid rgba(37, 99, 235, 0.15);
+    }
+
+    /* KPI Summary Row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .kpi-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .kpi-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text-main);
+    }
+
+    .kpi-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .kpi-card.critical { border-top: 4px solid var(--status-critical); }
+    .kpi-card.warning { border-top: 4px solid var(--status-warning); }
+    .kpi-card.info { border-top: 4px solid var(--status-info); }
+    .kpi-card.success { border-top: 4px solid var(--status-success); }
+
+    /* Section Styling */
+    section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--shadow-premium);
+    }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Danger/Warning Card style */
+    .issue-callout {
+      padding: 1.25rem;
+      border-radius: 12px;
+      margin-bottom: 1.25rem;
+      border: 1px solid transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .issue-callout.critical {
+      background-color: var(--status-critical-bg);
+      border-color: var(--status-critical-border);
+      color: #991b1b;
+    }
+
+    .issue-callout.warning {
+      background-color: var(--status-warning-bg);
+      border-color: var(--status-warning-border);
+      color: #92400e;
+    }
+
+    .issue-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .issue-badge {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    .critical .issue-badge { background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; }
+    .warning .issue-badge { background: #fef3c7; color: #d97706; border: 1px solid #fcd34d; }
+
+    .issue-desc {
+      font-size: 0.88rem;
+      color: #4b5563;
+    }
+
+    .issue-path {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .issue-path a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .issue-path a:hover {
+      text-decoration: underline;
+    }
+
+    /* Code Block styling */
+    pre {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+      border: 1px solid #1e293b;
+    }
+
+    /* Grid layout for dead/obsolete code */
+    .grid-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .grid-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .grid-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    .file-link {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .file-link:hover {
+      text-decoration: underline;
+    }
+
+    .item-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      font-weight: 800;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .item-label.dead { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+    .item-label.redundant { background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; }
+    .item-label.error { background: #fef2f2; color: #ef4444; border: 1px solid #fca5a5; }
+
+    .grid-item-body {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Clean Styled Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th {
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 0.75rem 1rem;
+      border-bottom: 2px solid var(--border);
+      background-color: #f8fafc;
+    }
+
+    td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background-color: #f8fafc;
+    }
+
+    .badge-status {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 20px;
+      text-transform: capitalize;
+    }
+
+    .badge-status.error { background: var(--status-critical-bg); color: var(--status-critical); border: 1px solid var(--status-critical-border); }
+    .badge-status.warning { background: var(--status-warning-bg); color: var(--status-warning); border: 1px solid var(--status-warning-border); }
+    .badge-status.info { background: var(--status-info-bg); color: var(--status-info); border: 1px solid var(--status-info-border); }
+
+    /* Footer styling */
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <h1>Bookings & Integrations Audit Report</h1>
+        <p>Static Analysis and Logical Review of the Bookings & Partner Sync Modules</p>
+      </div>
+      <div>
+        <span class="meta-tag">Date Scanned: 2026-06-15</span>
+      </div>
+    </header>
+
+    <!-- KPI Summary Dashboard -->
+    <div class="kpi-row">
+      <div class="kpi-card info">
+        <div>
+          <div class="kpi-title">Files Scanned</div>
+          <div class="kpi-value">10</div>
+        </div>
+        <div class="kpi-desc">Core api routes, components & libs</div>
+      </div>
+      <div class="kpi-card critical">
+        <div>
+          <div class="kpi-title">Logic & Security Risks</div>
+          <div class="kpi-value">3</div>
+        </div>
+        <div class="kpi-desc">Critical issues with cross-tenant data / RLS</div>
+      </div>
+      <div class="kpi-card warning">
+        <div>
+          <div class="kpi-title">Code Smells & Hooks</div>
+          <div class="kpi-value">7</div>
+        </div>
+        <div class="kpi-desc">State mutations in effects, memoization failure</div>
+      </div>
+      <div class="kpi-card success">
+        <div>
+          <div class="kpi-title">Dead Code Instances</div>
+          <div class="kpi-value">15</div>
+        </div>
+        <div class="kpi-desc">Unused imports, variables & dead state</div>
+      </div>
+    </div>
+
+    <!-- Section 1: Critical & Logical Bugs -->
+    <section>
+      <h2>⚠️ Critical Logic & Security Risks</h2>
+      <p style="margin-bottom: 1.25rem; font-size: 0.95rem; color: var(--text-muted);">
+        The following logical issues are severe, potentially leading to cross-tenant data leaks, incorrect booking associations, or database corruption during synchronization.
+      </p>
+
+      <!-- Risk 1 -->
+      <div class="issue-callout critical">
+        <div class="issue-title">
+          <span>1. Undefined Email Fallback in Partner Booking Sync</span>
+          <span class="issue-badge">Logical Bug</span>
+        </div>
+        <div class="issue-desc">
+          When looking up an existing guest in the target tenant organization, if the original guest email is null or empty, <code>originalGuest.email || undefined</code> resolves to <code>undefined</code>. In Prisma Client, passing an <code>undefined</code> key skips the filter parameter completely. Consequently, the query retrieves <strong>the first guest record</strong> found in the target organization's database, linking the newly synced booking to a completely unrelated guest!
+        </div>
+        <div class="issue-path">
+          File: <a href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/lib/bookingSync.ts#L87-L94">src/lib/bookingSync.ts:L87-94</a>
+        </div>
+        <pre>
+// src/lib/bookingSync.ts
+const existingGuest = await prisma.contact.findFirst({
+  where: {
+    organizationId: targetOrgId,
+    contactType: 'guest',
+    email: originalGuest.email || undefined, // &lt;-- resolves to undefined if falsy, skipping filter
+    deletedAt: null
+  }
+});</pre>
+      </div>
+
+      <!-- Risk 2 -->
+      <div class="issue-callout critical">
+        <div class="issue-title">
+          <span>2. Inbound Webhook Cross-Tenant Context Contamination</span>
+          <span class="issue-badge">Security Risk</span>
+        </div>
+        <div class="issue-desc">
+          In the Uplisting webhook endpoint, the fallback criteria in the organization query includes <code>{ isActive: true }</code>. Since this check is evaluated inside a database-wide <code>OR</code> statement, if a webhook payload lacks both <code>webhookOrgId</code> and <code>data.organization_slug</code>, the server will retrieve and run database mutations inside the context of the <strong>first active organization returned by the query</strong>, creating a severe cross-tenant data contamination risk.
+        </div>
+        <div class="issue-path">
+          File: <a href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/app/api/webhooks/uplisting/route.ts#L53-L61">src/app/api/webhooks/uplisting/route.ts:L53-61</a>
+        </div>
+        <pre>
+// src/app/api/webhooks/uplisting/route.ts
+const organization = await prisma.organization.findFirst({
+  where: {
+    OR: [
+      { id: webhookOrgId || undefined },
+      { slug: data.organization_slug || undefined },
+      { isActive: true } // &lt;-- Always matches first active tenant if above are empty
+    ]
+  }
+});</pre>
+      </div>
+
+      <!-- Risk 3 -->
+      <div class="issue-callout warning">
+        <div class="issue-title">
+          <span>3. Tenant Context Hard Block in Public Booking Engine</span>
+          <span class="issue-badge">Runtime Fragility</span>
+        </div>
+        <div class="issue-desc">
+          The public booking engine POST handler operates by finding the first active organization member to act as the context initiator for Prisma's Row-Level Security (RLS) context. If a tenant company suspends or removes all active user accounts, the booking engine will immediately throw a <code>500 Internal Server Error</code> ("Tenant organization has no active members"), preventing public guest bookings even if the property is open.
+        </div>
+        <div class="issue-path">
+          File: <a href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/app/api/bookings/engine/route.ts#L107-L114">src/app/api/bookings/engine/route.ts:L107-114</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Dead and Obsolete Code -->
+    <section>
+      <h2>🗑️ Dead Code & Unused Elements</h2>
+      <p style="margin-bottom: 1.5rem; font-size: 0.95rem; color: var(--text-muted);">
+        The following imports, variables, and code statements are defined but never used, cluttering the modules and increasing maintainability overhead.
+      </p>
+
+      <div class="grid-list">
+        <!-- Item 1 -->
+        <div class="grid-item">
+          <div class="grid-item-header">
+            <a class="file-link" href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/app/api/bookings/route.ts#L3">src/app/api/bookings/route.ts</a>
+            <span class="item-label dead">Unused Import</span>
+          </div>
+          <div class="grid-item-body">
+            <strong>Unused Import:</strong> <code>prisma</code> is imported on line 3 but never used (queries execute within the tenant context transaction block <code>tx</code>).
+          </div>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="grid-item">
+          <div class="grid-item-header">
+            <a class="file-link" href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/app/api/bookings/route.ts#L8">src/app/api/bookings/route.ts</a>
+            <span class="item-label dead">Unused Parameter</span>
+          </div>
+          <div class="grid-item-body">
+            <strong>Unused Parameter:</strong> <code>request</code> in the <code>GET</code> request handler is defined but never read.
+          </div>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="grid-item">
+          <div class="grid-item-header">
+            <a class="file-link" href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/components/bookings/BookingsList.tsx#L9">src/components/bookings/BookingsList.tsx</a>
+            <span class="item-label dead">Unused Import</span>
+          </div>
+          <div class="grid-item-body">
+            <strong>Unused Icon:</strong> <code>Search</code> is imported from <code>lucide-react</code> but never rendered in the component.
+          </div>
+        </div>
+
+        <!-- Item 4 -->
+        <div class="grid-item">
+          <div class="grid-item-header">
+            <a class="file-link" href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/components/bookings/BookingsList.tsx#L389">src/components/bookings/BookingsList.tsx</a>
+            <span class="item-label dead">Unused State</span>
+          </div>
+          <div class="grid-item-body">
+            <strong>Unused State Variable:</strong> <code>loading</code> state defined on line 389 is assigned but never read or referenced.
+          </div>
+        </div>
+
+        <!-- Item 5 -->
+        <div class="grid-item">
+          <div class="grid-item-header">
+            <a class="file-link" href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/components/bookings/BookingsList.tsx#L1237">src/components/bookings/BookingsList.tsx</a>
+            <span class="item-label dead">Dead Variables</span>
+          </div>
+          <div class="grid-item-body">
+            <strong>Unused Local Variables:</strong> <code>feeTotal</code> (L1237), <code>processingFee</code> (L1238), <code>merchantFee</code> (L1239), and <code>filteredBookings</code> (L1782) are created/assigned but never utilized.
+          </div>
+        </div>
+
+        <!-- Item 6 -->
+        <div class="grid-item">
+          <div class="grid-item-header">
+            <a class="file-link" href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/components/bookings/MasterCalendar.tsx#L11">src/components/bookings/MasterCalendar.tsx</a>
+            <span class="item-label dead">Unused Import</span>
+          </div>
+          <div class="grid-item-body">
+            <strong>Unused Icon:</strong> <code>Building</code> is imported from <code>lucide-react</code> but never rendered.
+          </div>
+        </div>
+
+        <!-- Item 7 -->
+        <div class="grid-item">
+          <div class="grid-item-header">
+            <a class="file-link" href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/components/bookings/MasterCalendar.tsx#L91">src/components/bookings/MasterCalendar.tsx</a>
+            <span class="item-label dead">Dead Hook</span>
+          </div>
+          <div class="grid-item-body">
+            <strong>Unused Setter:</strong> <code>setDaysCount</code> is defined via <code>useState(12)</code> but never used, keeping the calendar views locked to exactly 12 columns.
+          </div>
+        </div>
+
+        <!-- Item 8 -->
+        <div class="grid-item">
+          <div class="grid-item-header">
+            <a class="file-link" href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/components/channels/ChannelManagement.tsx#L15">src/components/channels/ChannelManagement.tsx</a>
+            <span class="item-label dead">Unused Import</span>
+          </div>
+          <div class="grid-item-body">
+            <strong>Unused Icon:</strong> <code>CheckCircle</code> is imported from <code>lucide-react</code> but never rendered in the markup.
+          </div>
+        </div>
+
+        <!-- Item 9 -->
+        <div class="grid-item">
+          <div class="grid-item-header">
+            <a class="file-link" href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/components/channels/ChannelManagement.tsx#L678">src/components/channels/ChannelManagement.tsx</a>
+            <span class="item-label redundant">Redundant Destructuring</span>
+          </div>
+          <div class="grid-item-body">
+            <strong>Redundant Destructuring:</strong> In <code>handleApplyMappings</code>, columns such as <code>commCol</code>, <code>basesCol</code>, <code>feeCol</code>, <code>vatCol</code>, <code>procCol</code>, etc., are destructured from <code>columnMappings</code> but never used inside the function (the entire object is passed to a helper instead).
+          </div>
+        </div>
+
+        <!-- Item 10 -->
+        <div class="grid-item">
+          <div class="grid-item-header">
+            <a class="file-link" href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/lib/bookingSync.ts#L194">src/lib/bookingSync.ts</a>
+            <span class="item-label dead">Unused Parameter</span>
+          </div>
+          <div class="grid-item-body">
+            <strong>Unused Parameter:</strong> In <code>syncDeletedBooking</code>, <code>targetOrgId</code> is declared in the function signature but never referenced inside the method logic.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: React Hook & Performance Warnings -->
+    <section>
+      <h2>⚡ React & Performance Warnings</h2>
+      <p style="margin-bottom: 1rem; font-size: 0.95rem; color: var(--text-muted);">
+        The React compiler and lint checks identified several hook violations, missing dependencies, and potential memory leaks in page-level components.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Line</th>
+            <th>File</th>
+            <th>Issue Type</th>
+            <th>Description / Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>L1054</td>
+            <td><code>BookingsList.tsx</code></td>
+            <td><span class="badge-status error">Cascading Render</span></td>
+            <td>Synchronous call of <code>setCurrency</code> directly within a <code>useEffect</code> body during initial mount can trigger multiple layout/rendering iterations, reducing browser responsiveness.</td>
+          </tr>
+          <tr>
+            <td>L464</td>
+            <td><code>BookingsList.tsx</code></td>
+            <td><span class="badge-status warning">Compiler Skip</span></td>
+            <td>React Compiler was unable to optimize <code>runAnalysis</code> due to failing to preserve the manual <code>useCallback</code> memoization boundaries.</td>
+          </tr>
+          <tr>
+            <td>L1758</td>
+            <td><code>BookingsList.tsx</code></td>
+            <td><span class="badge-status warning">Missing Dependency</span></td>
+            <td><code>useCallback</code> hook relies on <code>getAutoScheduledTasks</code> but does not include it in its dependency array.</td>
+          </tr>
+          <tr>
+            <td>L117</td>
+            <td><code>Reservations.tsx</code></td>
+            <td><span class="badge-status error">Cascading Render</span></td>
+            <td>Synchronous call to <code>setPropertySearchQuery</code> within an effect triggers immediately on render, causing double render cycles.</td>
+          </tr>
+          <tr>
+            <td>L152, 164</td>
+            <td><code>Reservations.tsx</code></td>
+            <td><span class="badge-status warning">Missing Dependency</span></td>
+            <td><code>useMemo</code> hook relies on translation function <code>t</code> but lacks it in the dependency lists, which could cause stale UI headings when switching interface language.</td>
+          </tr>
+          <tr>
+            <td>L355</td>
+            <td><code>ChannelManagement.tsx</code></td>
+            <td><span class="badge-status warning">Missing Dependency</span></td>
+            <td><code>useMemo</code> hook has a missing dependency: <code>getChannelNameOfRule</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section 4: Performance Bottlenecks -->
+    <section>
+      <h2>⚙️ Database Performance Bottlenecks</h2>
+      <p style="margin-bottom: 1rem; font-size: 0.95rem; color: var(--text-muted);">
+        The following locations contain database calls that will degrade performance as the number of linked listings scale.
+      </p>
+      
+      <div class="issue-callout warning">
+        <div class="issue-title">
+          <span>Unindexed Table-wide Scan for Reverse Mapping Lookup</span>
+          <span class="issue-badge">Performance</span>
+        </div>
+        <div class="issue-desc">
+          To perform a reverse sync lookup, <code>syncBookingToLinkedProperty</code> queries <strong>every active property in the database</strong> (<code>prisma.property.findMany({ where: { deletedAt: null } })</code>) and performs a manual array-find search in application memory. As the platform scales to hundreds or thousands of properties across all tenants, this query will load huge quantities of duplicate data and block CPU execution.
+        </div>
+        <div class="issue-path">
+          File: <a href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/lib/bookingSync.ts#L63-L69">src/lib/bookingSync.ts:L63-69</a>
+        </div>
+      </div>
+
+      <div class="issue-callout warning">
+        <div class="issue-title">
+          <span>Sequential Loop Sync with Sleep Timers in Cron</span>
+          <span class="issue-badge">Suboptimal Queue</span>
+        </div>
+        <div class="issue-desc">
+          The cron sync handler processes all active tenant organizations sequentially in a single process loop with a hardcoded <code>delay(500)</code> in between. While safe for small portfolios, this synchronous execution scales linearly and will trigger function timeouts or gateway errors on serverless execution environments (like Vercel).
+        </div>
+        <div class="issue-path">
+          File: <a href="file:///c:/Users/Walee/Desktop/Holiday%20Homes%20Platform/core/src/app/api/cron/sync-bookings/route.ts#L51-L114">src/app/api/cron/sync-bookings/route.ts:L51-114</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>Report generated by Code Auditor Subagent. All scan information compiled from static typescript compiler settings and ESLint AST rules.</p>
+    </footer>
+  </div>
+</body>
+</html>

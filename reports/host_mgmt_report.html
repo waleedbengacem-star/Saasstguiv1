@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Host & Organization Management - Code Audit Report</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --font-title: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      
+      /* Obsidian & Gold Theme Colors */
+      --color-bg: #070a13;
+      --color-card-bg: rgba(255, 255, 255, 0.025);
+      --color-card-hover: rgba(255, 255, 255, 0.04);
+      --color-border: rgba(212, 175, 55, 0.15);
+      --color-border-subtle: rgba(255, 255, 255, 0.06);
+      
+      --color-accent: #d4af37;
+      --color-accent-hover: #f3e5ab;
+      --color-accent-dim: rgba(212, 175, 55, 0.1);
+      
+      --color-text-primary: #f3f4f6;
+      --color-text-secondary: #9ca3af;
+      --color-text-muted: #6b7280;
+      
+      /* Status Colors */
+      --color-success: #10b981;
+      --color-success-bg: rgba(16, 185, 129, 0.08);
+      --color-success-border: rgba(16, 185, 129, 0.2);
+      
+      --color-warning: #f59e0b;
+      --color-warning-bg: rgba(245, 158, 11, 0.08);
+      --color-warning-border: rgba(245, 158, 11, 0.2);
+      
+      --color-danger: #ef4444;
+      --color-danger-bg: rgba(239, 68, 68, 0.08);
+      --color-danger-border: rgba(239, 68, 68, 0.2);
+      
+      --color-info: #3b82f6;
+      --color-info-bg: rgba(59, 130, 246, 0.08);
+      --color-info-border: rgba(59, 130, 246, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      padding: 40px 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-title h1 {
+      font-family: var(--font-title);
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-title p {
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .header-meta {
+      text-align: right;
+      font-size: 13px;
+      color: var(--color-text-muted);
+    }
+
+    .header-meta strong {
+      color: var(--color-accent);
+    }
+
+    /* ===== DASHBOARD CARDS ===== */
+    .dashboard-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .metric-card {
+      background: var(--color-card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .metric-card:hover {
+      border-color: var(--color-border);
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .metric-card.score::before { background-color: var(--color-accent); }
+    .metric-card.dead::before { background-color: var(--color-danger); }
+    .metric-card.risks::before { background-color: var(--color-warning); }
+    .metric-card.efficiency::before { background-color: var(--color-info); }
+
+    .metric-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--color-text-secondary);
+    }
+
+    .metric-value {
+      font-family: var(--font-title);
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.1;
+    }
+
+    .metric-desc {
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+
+    /* ===== EXECUTIVE SUMMARY ===== */
+    .summary-card {
+      background: var(--color-card-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .summary-card h2 {
+      font-family: var(--font-title);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--color-accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .summary-card p {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ===== DETAILED FINDINGS ===== */
+    .section-title {
+      font-family: var(--font-title);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      border-bottom: 1px solid var(--color-border-subtle);
+      padding-bottom: 10px;
+      margin-top: 12px;
+    }
+
+    .findings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .finding-card {
+      background: var(--color-card-bg);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .finding-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .finding-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .finding-file {
+      font-family: monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-accent);
+    }
+
+    .finding-type {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.danger {
+      background-color: var(--color-danger-bg);
+      color: var(--color-danger);
+      border: 1px solid var(--color-danger-border);
+    }
+
+    .badge.warning {
+      background-color: var(--color-warning-bg);
+      color: var(--color-warning);
+      border: 1px solid var(--color-warning-border);
+    }
+
+    .badge.info {
+      background-color: var(--color-info-bg);
+      color: var(--color-info);
+      border: 1px solid var(--color-info-border);
+    }
+
+    .finding-body {
+      font-size: 13.5px;
+      color: var(--color-text-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .finding-body ul {
+      margin-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .finding-body li strong {
+      color: var(--color-text-primary);
+    }
+
+    /* ===== CODE BOX ===== */
+    .code-box {
+      background: #020408;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      padding: 14px;
+      overflow-x: auto;
+      color: #e2e8f0;
+      margin-top: 8px;
+    }
+
+    .code-box span.comment {
+      color: #64748b;
+      font-style: italic;
+    }
+
+    .code-box span.keyword {
+      color: #f43f5e;
+      font-weight: bold;
+    }
+
+    .code-box span.highlight {
+      background-color: rgba(212, 175, 55, 0.15);
+      border-left: 2px solid var(--color-accent);
+      display: block;
+      padding-left: 4px;
+    }
+
+    /* ===== RECOMMENDATIONS TABLE ===== */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: 12px;
+      background: var(--color-card-bg);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    th {
+      font-family: var(--font-title);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-accent);
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    td {
+      color: var(--color-text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    td strong {
+      color: var(--color-text-primary);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- HEADER -->
+    <header>
+      <div class="header-title">
+        <h1>Code Audit Report</h1>
+        <p>Host & Organization Management Module</p>
+      </div>
+      <div class="header-meta">
+        <p>Date of Audit: <strong>June 15, 2026</strong></p>
+        <p>Prepared by: <strong>Code Auditor Subagent</strong></p>
+      </div>
+    </header>
+
+    <!-- DASHBOARD METRICS -->
+    <div class="dashboard-metrics">
+      <div class="metric-card score">
+        <span class="metric-label">Clean Code Score</span>
+        <span class="metric-value">84%</span>
+        <span class="metric-desc">Overall module quality rating</span>
+      </div>
+      <div class="metric-card dead">
+        <span class="metric-label">Dead Code Issues</span>
+        <span class="metric-value">14</span>
+        <span class="metric-desc">Unused imports, states & vars</span>
+      </div>
+      <div class="metric-card risks">
+        <span class="metric-label">Logical Risks</span>
+        <span class="metric-value">4</span>
+        <span class="metric-desc">RLS gaps & catch-block silences</span>
+      </div>
+      <div class="metric-card efficiency">
+        <span class="metric-label">Inefficiencies</span>
+        <span class="metric-value">2</span>
+        <span class="metric-desc">GET database writes & redundant loops</span>
+      </div>
+    </div>
+
+    <!-- EXECUTIVE SUMMARY -->
+    <div class="summary-card">
+      <h2>Executive Summary</h2>
+      <p>
+        This report details a complete static code audit of the <strong>Host & Organization Management</strong> modules, analyzing 7 critical client-side and server-side files. 
+        The objective of this analysis is to identify technical debt, obsolete structures, optimization opportunities, and logical risks without modifying database models or business routines. 
+        Our findings reveal that while the system behaves as intended on the surface, it carries substantial optimization opportunities, notably: multiple redundant database queries inside and outside transactional blocks, a critical <strong>"Write-on-GET"</strong> performance hazard in the admin preferences API, and several unused state hooks and icon imports causing oversized client payloads.
+      </p>
+    </div>
+
+    <!-- DETAILED FINDINGS -->
+    <h2 class="section-title">Detailed Findings - Frontend Modules</h2>
+    <div class="findings-list">
+      
+      <!-- FINDING 1 -->
+      <div class="finding-card">
+        <div class="finding-header">
+          <div class="finding-meta">
+            <span class="finding-file">src/app/dashboard/organizations/[id]/page.tsx</span>
+            <span class="finding-type">Organization Details Client Dashboard</span>
+          </div>
+          <span class="badge danger">Dead Code</span>
+        </div>
+        <div class="finding-body">
+          <p>The details dashboard page for organizations contains multiple unused dependencies and state imports, increasing build footprint and cluttering syntax:</p>
+          <ul>
+            <li><strong>Unused Router Hook:</strong> The Next.js <code>useRouter</code> hook is imported and instantiated as <code>const router = useRouter()</code> at line 66, but is never referenced.</li>
+            <li><strong>Unused User Context:</strong> The <code>user</code> property is destructured from <code>useAuth()</code> on line 67 but is never used anywhere in the JSX layout.</li>
+            <li><strong>Unused Lucide Icons:</strong> Eight imported UI icons are completely unused: <code>FileText</code>, <code>DollarSign</code>, <code>Clock</code>, <code>Shield</code>, <code>Zap</code>, <code>CheckCircle</code>, <code>ExternalLink</code>, and <code>RefreshCw</code>.</li>
+            <li><strong>Redundant Theme Constants:</strong> <code>COLORS.success</code>, <code>COLORS.warning</code>, and <code>COLORS.info</code> are defined in the file-level theme configuration but are omitted in rendering. The layout implements hardcoded status colors (e.g. <code>#10b981</code>, <code>#f59e0b</code>) inline instead.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- FINDING 2 -->
+      <div class="finding-card">
+        <div class="finding-header">
+          <div class="finding-meta">
+            <span class="finding-file">src/app/dashboard/host-management/page.tsx</span>
+            <span class="finding-type">Host Management Client Dashboard</span>
+          </div>
+          <span class="badge danger">Dead Code</span>
+        </div>
+        <div class="finding-body">
+          <p>At 4,767 lines, this file serves as a monolithic interface for hosts, intermediaries, and agent commissions, presenting multiple dead code spots:</p>
+          <ul>
+            <li><strong>Dead Form State Hooks:</strong> <code>newContractStart</code> (line 204), <code>newContractEnd</code> (line 205), and <code>editContractEnd</code> (line 228) are declared and reset in transaction submissions, but their stored values are never read. Contract terms are dynamically derived from linked property records instead.</li>
+            <li><strong>Unused Declared Variable:</strong> The variable <code>agentProfileForLandlord</code> is computed on line 1526 via a <code>find</code> lookup on the agents list, but is never used inside the landlord profile JSX rendering block.</li>
+          </ul>
+          <div class="code-box">
+            <span class="comment">// Line 1526 of page.tsx</span><br>
+            <span class="keyword">if</span> (viewingLandlord) {<br>
+            <span class="highlight">&nbsp;&nbsp;<span class="keyword">const</span> agentProfileForLandlord = agentsCalculated.find(a => a.id === viewingLandlord.id); <span class="comment">// Variable is defined but never read</span></span><br>
+            &nbsp;&nbsp;<span class="keyword">return</span> (<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lt;div style={{ display: 'flex', flexDirection: 'column' }}&gt;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...
+          </div>
+        </div>
+      </div>
+      
+    </div>
+
+    <h2 class="section-title">Detailed Findings - API & Server Routes</h2>
+    <div class="findings-list">
+
+      <!-- FINDING 3 -->
+      <div class="finding-card">
+        <div class="finding-header">
+          <div class="finding-meta">
+            <span class="finding-file">src/app/api/admin/preferences/route.ts</span>
+            <span class="finding-type">Super Admin Personal Preferences API</span>
+          </div>
+          <span class="badge warning">Performance Hazard</span>
+        </div>
+        <div class="finding-body">
+          <p>A critical architectural anti-pattern exists in the <code>GET</code> handler of the preferences route, executing data updates during read operations:</p>
+          <ul>
+            <li><strong>Write-on-GET Anti-pattern:</strong> In order to synchronize API integration keys, the <code>GET</code> endpoint loops over every organization in the database and runs updates if preferences differ. This occurs on <strong>every GET request</strong>, inducing severe database write locks and performance bottlenecks on reading preferences.</li>
+            <li><strong>Redundancy:</strong> This check is fully redundant since the <code>PUT</code> handler (which updates the preferences) already performs this organization-wide synchronization on change.</li>
+            <li><strong>Unused Parameter:</strong> The GET function parameter <code>request: NextRequest</code> is declared but never referenced.</li>
+          </ul>
+          <div class="code-box">
+            <span class="comment">// GET handler in src/app/api/admin/preferences/route.ts</span><br>
+            <span class="keyword">export async function</span> GET(request: NextRequest) { <span class="comment">// Unused parameter</span><br>
+            &nbsp;&nbsp;...<br>
+            <span class="highlight">&nbsp;&nbsp;<span class="keyword">if</span> (keysToSync.length > 0) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> orgs = <span class="keyword">await</span> prisma.organization.findMany();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">const</span> org <span class="keyword">of</span> orgs) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">await</span> prisma.organization.update({ ... }); <span class="comment">// Database WRITE in a GET loop!</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FINDING 4 -->
+      <div class="finding-card">
+        <div class="finding-header">
+          <div class="finding-meta">
+            <span class="finding-file">src/app/api/dashboard/host-management/route.ts</span>
+            <span class="finding-type">Host & Intermediary Management API</span>
+          </div>
+          <span class="badge warning">Query Inefficiency / RLS Risk</span>
+        </div>
+        <div class="finding-body">
+          <p>The host management route contains unused variables, redundant queries, and a potential multi-tenant leakage risk:</p>
+          <ul>
+            <li><strong>Unused Variables:</strong> The variable <code>matchedIds</code> (mapping matching property UUIDs) is calculated in both the <code>POST</code> and <code>PUT</code> endpoints but is never read or used.</li>
+            <li><strong>Redundant Safe Checks:</strong> In the <code>POST</code> method, if <code>useExistingHost</code> is enabled, it queries the database twice to inspect contact records by name, then executes a third duplicate "Safe check" query for the exact same contact criteria, resulting in redundant query round-trips.</li>
+            <li><strong>Redundant Post-Transaction Fetches:</strong> After running updates inside the <code>runInTenantContext</code> transaction block, the code queries the database a second time from outside the block to inspect the contact's <code>linkStatus</code>. The database details could have been returned directly from the transaction context.</li>
+            <li><strong>RLS Isolation Gaps:</strong> Direct queries are performed on <code>prisma.contact</code> (e.g. lines 457 and 737) outside of the <code>runInTenantContext</code> wrapper. In multi-tenant databases relying on Row Level Security, calling <code>prisma</code> directly will fail or bypass tenant filters because the session tenant parameters are not set.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- FINDING 5 -->
+      <div class="finding-card">
+        <div class="finding-header">
+          <div class="finding-meta">
+            <span class="finding-file">src/app/api/dashboard/host-management/respond-connection/route.ts</span>
+            <span class="finding-type">Inter-Organization Connection API</span>
+          </div>
+          <span class="badge info">Logical Detail</span>
+        </div>
+        <div class="finding-body">
+          <p>This API manages partner connections and property imports. It exhibits a minor notification logical limitation:</p>
+          <ul>
+            <li><strong>Single Admin Notification Fallback:</strong> Upon connection approval or rejection, the route notifies the partner organization's members. It fetches the recipient using <code>prisma.organizationMember.findFirst({ where: { organizationId: fromOrgId, isActive: true } })</code>. In organizations with multiple admins, only the first active admin returned receives the notification, leaving others uninformed.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- FINDING 6 -->
+      <div class="finding-card">
+        <div class="finding-header">
+          <div class="finding-meta">
+            <span class="finding-file">src/app/api/admin/organizations/[id]/route.ts</span>
+            <span class="finding-type">Admin Tenant Management API</span>
+          </div>
+          <span class="badge info">Unused Parameter</span>
+        </div>
+        <div class="finding-body">
+          <p>A minor clean-up finding in the admin tenant handler:</p>
+          <ul>
+            <li><strong>Unused Parameters:</strong> The GET handler defines <code>request: Request</code> as its first parameter but never references it. Since Next.js 15 uses asynchronous request parameter mapping, this parameter should either be omitted or replaced with an underscore (<code>_request</code>).</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CODE CLEANUP RECOMMENDATIONS -->
+    <h2 class="section-title">Recommended Refactorings</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Target File</th>
+            <th>Type</th>
+            <th>Issue / Impact</th>
+            <th>Action Plan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>organizations/[id]/page.tsx</strong></td>
+            <td>Client UI</td>
+            <td>Unused imports (icons, useRouter, user) bloating client payload.</td>
+            <td>Remove the unused Lucide imports, delete the <code>router</code> declaration, and clean up unused fields from <code>useAuth</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>host-management/page.tsx</strong></td>
+            <td>Client UI</td>
+            <td>Monolithic file (4,767 lines) with multiple unused state variables.</td>
+            <td>Remove dead form states (<code>newContractStart</code>, <code>newContractEnd</code>, <code>editContractEnd</code>). Extract sub-components for the Landlord and Agent dashboards.</td>
+          </tr>
+          <tr>
+            <td><strong>preferences/route.ts</strong></td>
+            <td>API Route</td>
+            <td><strong>High Risk:</strong> Write-on-GET triggers redundant DB updates on preferences fetch.</td>
+            <td>Completely remove the self-healing organization loop in the <code>GET</code> handler. Let the <code>PUT</code> handler manage all integration updates.</td>
+          </tr>
+          <tr>
+            <td><strong>host-management/route.ts</strong></td>
+            <td>API Route</td>
+            <td>Redundant SQL SELECT queries and direct RLS-bypassing queries on <code>prisma.contact</code>.</td>
+            <td>Return updated entities directly from the transaction. Wrap all database calls to <code>prisma.contact</code> inside the tenant context helper. Remove <code>matchedIds</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>respond-connection/route.ts</strong></td>
+            <td>API Route</td>
+            <td>Under-notifying team members of connection changes.</td>
+            <td>Query all active admins/managers of the target organization and create notifications in a batch loop.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>

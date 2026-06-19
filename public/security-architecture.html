@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holiday Homes SaaS — Security Architecture Documentation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --color-bg: #0a0a0f;
+      --color-surface: #12121a;
+      --color-surface-2: #1a1a26;
+      --color-border: rgba(212, 175, 55, 0.12);
+      --color-border-subtle: rgba(255, 255, 255, 0.06);
+      --color-gold: #d4af37;
+      --color-gold-light: #e8c547;
+      --color-text: #e8e8ed;
+      --color-text-secondary: #9a9ab0;
+      --color-text-muted: #5a5a72;
+      --color-danger: #ef4444;
+      --color-success: #22c55e;
+      --color-info: #3b82f6;
+      --color-warning: #f59e0b;
+      --color-code-bg: #0d0d14;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Print Styles */
+    @media print {
+      body { background: #fff; color: #1a1a2e; }
+      .page-break { page-break-before: always; }
+      .no-print { display: none !important; }
+      .cover-page { page-break-after: always; }
+      :root {
+        --color-bg: #ffffff;
+        --color-surface: #f8f9fa;
+        --color-surface-2: #f1f3f5;
+        --color-border: rgba(0,0,0,0.1);
+        --color-text: #1a1a2e;
+        --color-text-secondary: #555;
+        --color-text-muted: #888;
+        --color-code-bg: #f6f8fa;
+        --color-gold: #b8941f;
+      }
+      .section-card { box-shadow: none; border: 1px solid #ddd; }
+      code { background: #f0f0f0 !important; color: #1a1a2e !important; }
+    }
+
+    @page {
+      size: A4;
+      margin: 20mm;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 32px;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(135deg, #0a0a0f 0%, #12121a 50%, #1a1a26 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-page::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.03) 0%, transparent 70%);
+      animation: pulse 8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+
+    .cover-logo {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--color-text);
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover-logo span { color: var(--color-gold); }
+
+    .cover-subtitle {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      color: var(--color-gold);
+      font-weight: 600;
+      margin-bottom: 48px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover-divider {
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--color-gold), transparent);
+      margin: 24px auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover-meta {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      position: relative;
+      z-index: 1;
+      line-height: 2;
+    }
+
+    .cover-meta strong { color: var(--color-text); font-weight: 600; }
+
+    .cover-badge {
+      display: inline-block;
+      margin-top: 32px;
+      padding: 8px 24px;
+      border: 1px solid var(--color-gold);
+      border-radius: 24px;
+      color: var(--color-gold);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Section Headers */
+    .section-number {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-gold);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 4px;
+    }
+
+    h2 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--color-text);
+      letter-spacing: -0.5px;
+    }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px 0;
+      color: var(--color-text);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 20px 0 8px 0;
+      color: var(--color-gold-light);
+    }
+
+    .section-description {
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      margin-bottom: 28px;
+      max-width: 720px;
+    }
+
+    /* Cards */
+    .section-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+
+    thead th {
+      background: var(--color-surface-2);
+      color: var(--color-gold);
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--color-border-subtle);
+      color: var(--color-text-secondary);
+      vertical-align: top;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    tbody td:first-child {
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    /* Code */
+    code {
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 12px;
+      background: var(--color-code-bg);
+      color: var(--color-gold-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    pre {
+      background: var(--color-code-bg);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: var(--color-text-secondary);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .code-comment { color: var(--color-text-muted); }
+    .code-keyword { color: #c792ea; }
+    .code-string { color: #c3e88d; }
+    .code-function { color: #82aaff; }
+
+    /* Flow Diagram */
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      margin: 20px 0;
+      justify-content: center;
+    }
+
+    .flow-step {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text);
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .flow-step.highlight {
+      border-color: var(--color-gold);
+      background: rgba(212, 175, 55, 0.08);
+      color: var(--color-gold);
+    }
+
+    .flow-arrow {
+      color: var(--color-text-muted);
+      font-size: 18px;
+      padding: 0 6px;
+    }
+
+    /* Alert Boxes */
+    .alert {
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .alert-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .alert-success {
+      background: rgba(34, 197, 94, 0.08);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      color: var(--color-success);
+    }
+
+    .alert-warning {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      color: var(--color-warning);
+    }
+
+    .alert-danger {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: var(--color-danger);
+    }
+
+    .alert-info {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      color: var(--color-info);
+    }
+
+    /* Layers Diagram */
+    .layer-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin: 20px 0;
+    }
+
+    .layer {
+      padding: 14px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .layer-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      opacity: 0.7;
+    }
+
+    .layer-1 { background: rgba(212, 175, 55, 0.15); color: var(--color-gold); border: 1px solid rgba(212, 175, 55, 0.3); }
+    .layer-2 { background: rgba(59, 130, 246, 0.1); color: var(--color-info); border: 1px solid rgba(59, 130, 246, 0.2); }
+    .layer-3 { background: rgba(168, 85, 247, 0.1); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.2); }
+    .layer-4 { background: rgba(34, 197, 94, 0.1); color: var(--color-success); border: 1px solid rgba(34, 197, 94, 0.2); }
+    .layer-5 { background: rgba(239, 68, 68, 0.1); color: var(--color-danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+
+    /* Bullet Lists */
+    ul { margin: 8px 0 8px 20px; }
+    li {
+      margin-bottom: 6px;
+      font-size: 13.5px;
+      color: var(--color-text-secondary);
+    }
+    li strong { color: var(--color-text); }
+
+    /* TOC */
+    .toc-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .toc-list li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .toc-list li:last-child { border-bottom: none; }
+
+    .toc-number {
+      color: var(--color-gold);
+      font-weight: 700;
+      font-size: 12px;
+      margin-right: 12px;
+      width: 24px;
+    }
+
+    .toc-title { font-weight: 500; font-size: 14px; color: var(--color-text); flex-grow: 1; }
+    .toc-page { color: var(--color-text-muted); font-size: 13px; }
+
+    /* Permission Matrix */
+    .perm-granted { color: var(--color-success); font-weight: 600; }
+    .perm-denied { color: var(--color-text-muted); }
+
+    .footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--color-border-subtle);
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: 12px;
+    }
+
+    /* Print Button */
+    .print-btn {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      background: var(--color-gold);
+      color: #0a0a0f;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(212, 175, 55, 0.3);
+      z-index: 1000;
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .print-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(212, 175, 55, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ======================== COVER PAGE ======================== -->
+<div class="cover-page">
+  <div class="cover-logo">HOLIDAY<span>HOMES</span></div>
+  <div class="cover-subtitle">SaaS Platform</div>
+  <div class="cover-divider"></div>
+  <div class="cover-title">Security Architecture<br>Documentation</div>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <strong>Version:</strong> 1.0<br>
+    <strong>Date:</strong> May 31, 2026<br>
+    <strong>Classification:</strong> Internal — Confidential<br>
+    <strong>Target:</strong> UAE Holiday Homes Property Management
+  </div>
+  <div class="cover-badge">🔒 Security Document</div>
+</div>
+
+<!-- ======================== TABLE OF CONTENTS ======================== -->
+<div class="container page-break">
+  <div class="section-number">Contents</div>
+  <h2>Table of Contents</h2>
+  <div class="section-card" style="margin-top: 20px;">
+    <ul class="toc-list">
+      <li><span class="toc-number">01</span><span class="toc-title">Security Architecture Overview</span></li>
+      <li><span class="toc-number">02</span><span class="toc-title">Authentication System</span></li>
+      <li><span class="toc-number">03</span><span class="toc-title">Multi-Factor Authentication (MFA)</span></li>
+      <li><span class="toc-number">04</span><span class="toc-title">Session Management</span></li>
+      <li><span class="toc-number">05</span><span class="toc-title">Role-Based Access Control (RBAC)</span></li>
+      <li><span class="toc-number">06</span><span class="toc-title">Multi-Tenancy & Data Isolation</span></li>
+      <li><span class="toc-number">07</span><span class="toc-title">Row-Level Security (RLS)</span></li>
+      <li><span class="toc-number">08</span><span class="toc-title">Route & Middleware Protection</span></li>
+      <li><span class="toc-number">09</span><span class="toc-title">Data Encryption & Hashing</span></li>
+      <li><span class="toc-number">10</span><span class="toc-title">Audit Logging</span></li>
+      <li><span class="toc-number">11</span><span class="toc-title">Cookie & Transport Security</span></li>
+      <li><span class="toc-number">12</span><span class="toc-title">Environment Separation</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ======================== SECTION 1: OVERVIEW ======================== -->
+<div class="container page-break">
+  <div class="section-number">Section 01</div>
+  <h2>Security Architecture Overview</h2>
+  <p class="section-description">
+    The Holiday Homes SaaS platform implements a defense-in-depth security model with multiple
+    overlapping layers. Each layer provides independent protection — if one fails, subsequent layers
+    prevent unauthorized access.
+  </p>
+
+  <div class="section-card">
+    <h4>Defense-in-Depth Stack</h4>
+    <div class="layer-stack">
+      <div class="layer layer-1">
+        <span>Layer 1 — Cloudflare Edge (SSL/TLS, DDoS, WAF)</span>
+        <span class="layer-label">Network</span>
+      </div>
+      <div class="layer layer-2">
+        <span>Layer 2 — Next.js Middleware (Route Guard + Cookie Check)</span>
+        <span class="layer-label">Gateway</span>
+      </div>
+      <div class="layer layer-3">
+        <span>Layer 3 — Server-Side Session Verification (DB Stateful)</span>
+        <span class="layer-label">Application</span>
+      </div>
+      <div class="layer layer-4">
+        <span>Layer 4 — RBAC Permission Enforcement</span>
+        <span class="layer-label">Authorization</span>
+      </div>
+      <div class="layer layer-5">
+        <span>Layer 5 — PostgreSQL Row-Level Security (Tenant Isolation)</span>
+        <span class="layer-label">Database</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h4>Security Technologies Used</h4>
+    <table>
+      <thead>
+        <tr><th>Concern</th><th>Technology</th><th>Standard</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Password Hashing</td><td>bcryptjs (10 salt rounds)</td><td>OWASP Recommended</td></tr>
+        <tr><td>Session Tokens</td><td>crypto.randomBytes(32) → SHA-256</td><td>256-bit entropy</td></tr>
+        <tr><td>MFA Secret Encryption</td><td>AES-256-GCM with auth tag</td><td>NIST SP 800-38D</td></tr>
+        <tr><td>TOTP Verification</td><td>RFC 6238 (otplib)</td><td>30-second window</td></tr>
+        <tr><td>Tenant Isolation</td><td>PostgreSQL RLS Policies</td><td>Row-Level Security</td></tr>
+        <tr><td>Transport</td><td>TLS 1.3 via Cloudflare</td><td>HTTPS Only</td></tr>
+        <tr><td>Cookie Security</td><td>HttpOnly, Secure, SameSite=Strict</td><td>OWASP Cookie Guide</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ======================== SECTION 2: AUTHENTICATION ======================== -->
+<div class="container page-break">
+  <div class="section-number">Section 02</div>
+  <h2>Authentication System</h2>
+  <p class="section-description">
+    Custom-built authentication (no third-party auth providers). Credentials-based login with 
+    server-side stateful sessions stored in PostgreSQL.
+  </p>
+
+  <div class="section-card">
+    <h4>Registration Flow</h4>
+    <div class="flow-diagram">
+      <div class="flow-step">User Submits Form</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Validate Input</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Check Duplicate Email</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">bcrypt Hash Password</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">DB Transaction</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">Create Session</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Set HttpOnly Cookie</div>
+    </div>
+
+    <h4>Login Flow</h4>
+    <div class="flow-diagram">
+      <div class="flow-step">Email + Password</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Find User in DB</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">bcrypt.compare()</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Check MFA Enabled?</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">Verify TOTP Code</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Create Session</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Set Cookie</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h4>Password Storage</h4>
+    <pre><code><span class="code-comment">// password.ts — bcryptjs with 10 salt rounds</span>
+<span class="code-keyword">import</span> bcrypt <span class="code-keyword">from</span> <span class="code-string">'bcryptjs'</span>;
+
+<span class="code-keyword">const</span> SALT_ROUNDS = <span class="code-string">10</span>;
+
+<span class="code-keyword">export async function</span> <span class="code-function">hashPassword</span>(password: string): Promise&lt;string&gt; {
+  <span class="code-keyword">return</span> bcrypt.<span class="code-function">hash</span>(password, SALT_ROUNDS);
+}
+
+<span class="code-keyword">export async function</span> <span class="code-function">verifyPassword</span>(password: string, hash: string): Promise&lt;boolean&gt; {
+  <span class="code-keyword">return</span> bcrypt.<span class="code-function">compare</span>(password, hash);
+}</code></pre>
+
+    <div class="alert alert-success">
+      <span class="alert-icon">✓</span>
+      <div><strong>Why bcrypt?</strong> — Adaptive cost function makes brute-force attacks computationally expensive. 10 salt rounds ≈ ~100ms per hash, sufficient for production use while resistant to GPU attacks.</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h4>Security Decisions</h4>
+    <ul>
+      <li><strong>No plaintext password storage</strong> — only bcrypt hashes stored in the <code>passwordHash</code> column.</li>
+      <li><strong>Constant-time comparison</strong> — <code>bcrypt.compare()</code> is inherently timing-safe.</li>
+      <li><strong>Generic error messages</strong> — login returns "Invalid email or password" regardless of whether the email or password is wrong (prevents user enumeration).</li>
+      <li><strong>Account deactivation check</strong> — <code>user.isActive</code> is verified before password comparison.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ======================== SECTION 3: MFA ======================== -->
+<div class="container page-break">
+  <div class="section-number">Section 03</div>
+  <h2>Multi-Factor Authentication (MFA)</h2>
+  <p class="section-description">
+    Time-based One-Time Password (TOTP) per RFC 6238. Compatible with Google Authenticator,
+    Authy, and 1Password. MFA secrets are encrypted at rest using AES-256-GCM.
+  </p>
+
+  <div class="section-card">
+    <h4>MFA Setup Flow</h4>
+    <div class="flow-diagram">
+      <div class="flow-step">User Initiates Setup</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">Generate TOTP Secret</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">AES-256-GCM Encrypt</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Store Encrypted Secret</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Generate QR Code</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">User Scans with App</div>
+    </div>
+
+    <h4>MFA Verification Flow</h4>
+    <div class="flow-diagram">
+      <div class="flow-step">User Enters 6-Digit Code</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Read Encrypted Secret</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">AES-256-GCM Decrypt</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">TOTP Verify (30s window)</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Grant / Deny Access</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h4>Secret Encryption Implementation</h4>
+    <pre><code><span class="code-comment">// mfa.ts — AES-256-GCM with authentication tag</span>
+<span class="code-keyword">const</span> ALGORITHM = <span class="code-string">'aes-256-gcm'</span>;
+<span class="code-keyword">const</span> IV_LENGTH = <span class="code-string">12</span>; <span class="code-comment">// 96-bit IV per NIST recommendation</span>
+
+<span class="code-keyword">function</span> <span class="code-function">encryptSecret</span>(secret: string): string {
+  <span class="code-keyword">const</span> key = crypto.<span class="code-function">createHash</span>(<span class="code-string">'sha256'</span>).<span class="code-function">update</span>(ENCRYPTION_KEY).<span class="code-function">digest</span>();
+  <span class="code-keyword">const</span> iv = crypto.<span class="code-function">randomBytes</span>(IV_LENGTH);
+  <span class="code-keyword">const</span> cipher = crypto.<span class="code-function">createCipheriv</span>(ALGORITHM, key, iv);
+  
+  <span class="code-comment">// Output format: iv_hex:auth_tag_hex:ciphertext_hex</span>
+  <span class="code-keyword">return</span> `${iv}:${authTag}:${encrypted}`;
+}</code></pre>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">🔑</span>
+      <div><strong>Encryption Key:</strong> Derived from <code>MFA_ENCRYPTION_KEY</code> environment variable via SHA-256. The key is <em>never</em> stored in source code or committed to version control.</div>
+    </div>
+
+    <h4>MFA Data Storage</h4>
+    <table>
+      <thead>
+        <tr><th>Column</th><th>Content</th><th>Encryption</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>mfaSecret</code></td><td>TOTP secret key</td><td>AES-256-GCM (encrypted at rest)</td></tr>
+        <tr><td><code>isMfaEnabled</code></td><td>Boolean flag</td><td>Plaintext (non-sensitive)</td></tr>
+        <tr><td><code>backupCodes</code></td><td>JSON array of recovery codes</td><td>JSON (planned: hashed)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ======================== SECTION 4: SESSIONS ======================== -->
+<div class="container page-break">
+  <div class="section-number">Section 04</div>
+  <h2>Session Management</h2>
+  <p class="section-description">
+    Stateful, server-side sessions stored in PostgreSQL. No JWTs — tokens are opaque random strings
+    whose SHA-256 hashes are stored in the database.
+  </p>
+
+  <div class="section-card">
+    <h4>Session Token Lifecycle</h4>
+    <div class="flow-diagram">
+      <div class="flow-step highlight">Generate 32 Random Bytes</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Hex Encode (64 chars)</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">SHA-256 Hash</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Store Hash in DB</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Send Plaintext via Cookie</div>
+    </div>
+
+    <pre><code><span class="code-comment">// session.ts</span>
+<span class="code-keyword">function</span> <span class="code-function">generateToken</span>(): string {
+  <span class="code-keyword">return</span> crypto.<span class="code-function">randomBytes</span>(32).<span class="code-function">toString</span>(<span class="code-string">'hex'</span>);  <span class="code-comment">// 256-bit entropy</span>
+}
+
+<span class="code-keyword">function</span> <span class="code-function">hashToken</span>(token: string): string {
+  <span class="code-keyword">return</span> crypto.<span class="code-function">createHash</span>(<span class="code-string">'sha256'</span>).<span class="code-function">update</span>(token).<span class="code-function">digest</span>(<span class="code-string">'hex'</span>);
+}</code></pre>
+  </div>
+
+  <div class="section-card">
+    <h4>Session Database Record</h4>
+    <table>
+      <thead>
+        <tr><th>Field</th><th>Type</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>tokenHash</code></td><td>String (unique)</td><td>SHA-256 of the plaintext token — database never sees the plaintext</td></tr>
+        <tr><td><code>userId</code></td><td>UUID (FK)</td><td>The authenticated user</td></tr>
+        <tr><td><code>organizationId</code></td><td>UUID (FK, nullable)</td><td>Active tenant context for this session</td></tr>
+        <tr><td><code>ipAddress</code></td><td>inet</td><td>Client IP at session creation (audit/anomaly detection)</td></tr>
+        <tr><td><code>userAgent</code></td><td>String</td><td>Browser/device fingerprint</td></tr>
+        <tr><td><code>expiresAt</code></td><td>Timestamptz</td><td>7-day TTL — expired sessions are auto-revoked</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-warning">
+      <span class="alert-icon">⚠</span>
+      <div><strong>Why hash session tokens?</strong> — If the database is compromised (SQL injection, backup leak), attackers cannot reconstruct valid session cookies from the stored hashes. This follows the "tokens as secrets" pattern from OWASP Session Management Guidelines.</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h4>Session Verification on Every Request</h4>
+    <pre><code><span class="code-comment">// Every protected API route / server component calls:</span>
+<span class="code-keyword">const</span> session = <span class="code-keyword">await</span> <span class="code-function">verifySession</span>(sessionToken);
+
+<span class="code-comment">// Verification checks:</span>
+<span class="code-comment">// 1. Hash the cookie token → lookup in sessions table</span>
+<span class="code-comment">// 2. If not found → return null (invalid token)</span>
+<span class="code-comment">// 3. If expired → delete session row, return null</span>
+<span class="code-comment">// 4. Load user + org + role + permissions → return full context</span></code></pre>
+
+    <h4>Session Revocation</h4>
+    <ul>
+      <li><strong>Logout:</strong> Session row is deleted from database + cookie is expired (set to epoch 0)</li>
+      <li><strong>Expired:</strong> Sessions past their 7-day TTL are deleted on next verification attempt</li>
+      <li><strong>Deactivated User:</strong> <code>user.isActive = false</code> prevents login; existing sessions continue until TTL but role check returns <code>guest</code></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ======================== SECTION 5: RBAC ======================== -->
+<div class="container page-break">
+  <div class="section-number">Section 05</div>
+  <h2>Role-Based Access Control (RBAC)</h2>
+  <p class="section-description">
+    Fine-grained permission system with wildcard support. Roles are scoped per-organization,
+    allowing each tenant to customize access levels independently.
+  </p>
+
+  <div class="section-card">
+    <h4>System Roles & Permission Matrix</h4>
+    <table>
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Properties</th>
+          <th>Bookings</th>
+          <th>Tasks</th>
+          <th>Maintenance</th>
+          <th>Accounting</th>
+          <th>WhatsApp</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Super Admin</strong></td>
+          <td class="perm-granted">★ ALL</td>
+          <td class="perm-granted">★ ALL</td>
+          <td class="perm-granted">★ ALL</td>
+          <td class="perm-granted">★ ALL</td>
+          <td class="perm-granted">★ ALL</td>
+          <td class="perm-granted">★ ALL</td>
+        </tr>
+        <tr>
+          <td><strong>Org Admin</strong></td>
+          <td class="perm-granted">★ ALL</td>
+          <td class="perm-granted">★ ALL</td>
+          <td class="perm-granted">★ ALL</td>
+          <td class="perm-granted">★ ALL</td>
+          <td class="perm-granted">★ ALL</td>
+          <td class="perm-granted">★ ALL</td>
+        </tr>
+        <tr>
+          <td><strong>Property Manager</strong></td>
+          <td class="perm-granted">✓ CRUD + Financial</td>
+          <td class="perm-granted">✓ CRUD + Sync</td>
+          <td class="perm-granted">✓ CRUD + Complete</td>
+          <td class="perm-granted">✓ CRUD + Approve</td>
+          <td class="perm-denied">✗ None</td>
+          <td class="perm-granted">✓ Chat + Send</td>
+        </tr>
+        <tr>
+          <td><strong>Accountant</strong></td>
+          <td class="perm-granted">✓ Read + Financial</td>
+          <td class="perm-granted">✓ Read</td>
+          <td class="perm-denied">✗ None</td>
+          <td class="perm-denied">✗ None</td>
+          <td class="perm-granted">✓ Full Access</td>
+          <td class="perm-denied">✗ None</td>
+        </tr>
+        <tr>
+          <td><strong>Coordinator</strong></td>
+          <td class="perm-granted">✓ Read</td>
+          <td class="perm-denied">✗ None</td>
+          <td class="perm-granted">✓ CRUD + Complete</td>
+          <td class="perm-granted">✓ CRUD</td>
+          <td class="perm-denied">✗ None</td>
+          <td class="perm-granted">✓ Send</td>
+        </tr>
+        <tr>
+          <td><strong>Owner</strong></td>
+          <td class="perm-granted">✓ Portal View</td>
+          <td class="perm-denied">✗ None</td>
+          <td class="perm-denied">✗ None</td>
+          <td class="perm-granted">✓ Approve Quotes</td>
+          <td class="perm-granted">✓ View Statements</td>
+          <td class="perm-denied">✗ None</td>
+        </tr>
+        <tr>
+          <td><strong>Vendor</strong></td>
+          <td class="perm-denied">✗ None</td>
+          <td class="perm-denied">✗ None</td>
+          <td class="perm-denied">✗ None</td>
+          <td class="perm-granted">✓ Work Orders</td>
+          <td class="perm-granted">✓ Submit Invoices</td>
+          <td class="perm-denied">✗ None</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-card">
+    <h4>Permission Enforcement Code</h4>
+    <pre><code><span class="code-comment">// permissions.ts — Server-side enforcement</span>
+<span class="code-keyword">export async function</span> <span class="code-function">hasPermission</span>(requiredPermission: string): Promise&lt;boolean&gt; {
+  <span class="code-keyword">const</span> permissions = <span class="code-function">getPermissionsFromSession</span>();
+
+  <span class="code-comment">// Wildcard overrides for admins</span>
+  <span class="code-keyword">if</span> (permissions.<span class="code-function">includes</span>(<span class="code-string">'*'</span>) || permissions.<span class="code-function">includes</span>(<span class="code-string">'admin.*'</span>)) {
+    <span class="code-keyword">return true</span>;
+  }
+
+  <span class="code-keyword">return</span> permissions.<span class="code-function">includes</span>(requiredPermission);
+}
+
+<span class="code-comment">// Usage in API routes:</span>
+<span class="code-keyword">await</span> <span class="code-function">requirePermission</span>(<span class="code-string">'accounting.manage_ledger'</span>);
+<span class="code-comment">// Throws 403 Forbidden if user lacks this permission</span></code></pre>
+
+    <h4>Permission Format</h4>
+    <ul>
+      <li><code>*</code> — Wildcard: full access to everything (Super Admin / Org Admin)</li>
+      <li><code>properties.create</code> — Resource-level: <code>{resource}.{action}</code></li>
+      <li><code>owner_portal.view_statements</code> — Portal-scoped: limits access to portal features only</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ======================== SECTION 6: MULTI-TENANCY ======================== -->
+<div class="container page-break">
+  <div class="section-number">Section 06</div>
+  <h2>Multi-Tenancy & Data Isolation</h2>
+  <p class="section-description">
+    Every data record belongs to an Organization. Isolation is enforced at the database level
+    using PostgreSQL Row-Level Security, making cross-tenant data leakage impossible even
+    if application code has bugs.
+  </p>
+
+  <div class="section-card">
+    <h4>Tenant Architecture</h4>
+    <div class="layer-stack">
+      <div class="layer layer-1">
+        <span>Organization A — Palm Retreats LLC</span>
+        <span class="layer-label">Tenant</span>
+      </div>
+      <div class="layer layer-2">
+        <span>Organization B — Marina Luxury Homes</span>
+        <span class="layer-label">Tenant</span>
+      </div>
+      <div class="layer layer-3">
+        <span>Organization C — Desert Oasis Properties</span>
+        <span class="layer-label">Tenant</span>
+      </div>
+      <div class="layer layer-4" style="margin-top: 8px;">
+        <span>Shared PostgreSQL Database (Neon) with RLS Policies</span>
+        <span class="layer-label">Database</span>
+      </div>
+    </div>
+
+    <div class="alert alert-danger">
+      <span class="alert-icon">🛡️</span>
+      <div><strong>Zero Trust Between Tenants:</strong> Even if application code mistakenly omits a <code>WHERE organizationId = ...</code> filter, the PostgreSQL RLS policy will silently filter out rows belonging to other tenants. This is a database-level guarantee independent of application correctness.</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h4>All Tenant-Isolated Tables (34 total)</h4>
+    <table>
+      <thead>
+        <tr><th>Domain</th><th>Tables</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Auth & Admin</td><td><code>organizations</code>, <code>organization_members</code>, <code>roles</code>, <code>audit_logs</code></td></tr>
+        <tr><td>Properties</td><td><code>properties</code>, <code>property_photos</code>, <code>property_documents</code>, <code>property_manager_assignments</code>, <code>owner_properties</code></td></tr>
+        <tr><td>CRM</td><td><code>contacts</code>, <code>vendor_categories</code></td></tr>
+        <tr><td>Bookings</td><td><code>bookings</code>, <code>uplisting_sync_logs</code></td></tr>
+        <tr><td>Operations</td><td><code>tasks</code>, <code>task_comments</code>, <code>task_attachments</code>, <code>maintenance_requests</code>, <code>maintenance_quotes</code>, <code>work_orders</code>, <code>claims</code>, <code>claim_evidences</code></td></tr>
+        <tr><td>Accounting</td><td><code>chart_of_accounts</code>, <code>journal_entries</code>, <code>journal_lines</code>, <code>invoices</code>, <code>invoice_line_items</code>, <code>payments</code>, <code>bank_accounts</code>, <code>owner_statements</code></td></tr>
+        <tr><td>Documents</td><td><code>documents</code>, <code>docusign_envelopes</code></td></tr>
+        <tr><td>Communications</td><td><code>whatsapp_messages</code>, <code>email_logs</code>, <code>notifications</code></td></tr>
+        <tr><td>Workflows</td><td><code>workflow_definitions</code>, <code>workflow_instances</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ======================== SECTION 7: RLS ======================== -->
+<div class="container page-break">
+  <div class="section-number">Section 07</div>
+  <h2>Row-Level Security (RLS)</h2>
+  <p class="section-description">
+    PostgreSQL-native row-level security enforces tenant isolation at the database engine level.
+    RLS policies are transparent to the application — queries automatically return only rows
+    belonging to the current organization.
+  </p>
+
+  <div class="section-card">
+    <h4>RLS Policy Definition</h4>
+    <pre><code><span class="code-comment">-- rls.sql — Applied to all tenant tables</span>
+
+<span class="code-comment">-- Helper functions read session context variables</span>
+<span class="code-keyword">CREATE FUNCTION</span> <span class="code-function">get_current_org_id</span>() <span class="code-keyword">RETURNS</span> uuid <span class="code-keyword">AS</span> $$
+  <span class="code-keyword">SELECT</span> NULLIF(current_setting(<span class="code-string">'app.current_org_id'</span>, true), <span class="code-string">''</span>)::uuid;
+$$ <span class="code-keyword">LANGUAGE</span> sql <span class="code-keyword">STABLE</span>;
+
+<span class="code-comment">-- Example: Properties table policy</span>
+<span class="code-keyword">CREATE POLICY</span> properties_isolation <span class="code-keyword">ON</span> <span class="code-string">"properties"</span>
+  <span class="code-keyword">FOR ALL TO</span> public
+  <span class="code-keyword">USING</span> (<span class="code-string">"organizationId"</span> = <span class="code-function">get_current_org_id</span>())
+  <span class="code-keyword">WITH CHECK</span> (<span class="code-string">"organizationId"</span> = <span class="code-function">get_current_org_id</span>());</code></pre>
+
+    <h4>Runtime Context Injection</h4>
+    <pre><code><span class="code-comment">// client.ts — Sets tenant context before every query</span>
+<span class="code-keyword">export async function</span> <span class="code-function">runInTenantContext</span>&lt;T&gt;(orgId, userId, fn) {
+  <span class="code-keyword">return await</span> prisma.<span class="code-function">$transaction</span>(<span class="code-keyword">async</span> (tx) => {
+    <span class="code-comment">// SET LOCAL scopes these variables to this transaction ONLY</span>
+    <span class="code-keyword">await</span> tx.<span class="code-function">$executeRawUnsafe</span>(
+      <span class="code-string">`SET LOCAL app.current_org_id = '${orgId}';`</span>
+    );
+    <span class="code-keyword">await</span> tx.<span class="code-function">$executeRawUnsafe</span>(
+      <span class="code-string">`SET LOCAL app.current_user_id = '${userId}';`</span>
+    );
+    <span class="code-keyword">return await</span> <span class="code-function">fn</span>(tx);
+  });
+}</code></pre>
+
+    <div class="alert alert-success">
+      <span class="alert-icon">✓</span>
+      <div><strong>SET LOCAL guarantees:</strong> Session variables are scoped to the transaction only. They are automatically discarded when the transaction ends, preventing context leakage between concurrent requests.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SECTION 8: MIDDLEWARE ======================== -->
+<div class="container page-break">
+  <div class="section-number">Section 08</div>
+  <h2>Route & Middleware Protection</h2>
+  <p class="section-description">
+    Two-layer route protection: lightweight middleware for cookie-presence gating,
+    plus server-side DB verification in route handlers and server components.
+  </p>
+
+  <div class="section-card">
+    <h4>Middleware Route Classification</h4>
+    <table>
+      <thead>
+        <tr><th>Route Pattern</th><th>Access Level</th><th>Protection</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>/login</code>, <code>/register</code></td><td>Public</td><td>No auth required</td></tr>
+        <tr><td><code>/api/auth/login</code>, <code>/api/auth/register</code></td><td>Public API</td><td>No auth required</td></tr>
+        <tr><td><code>/api/webhooks/*</code></td><td>External</td><td>Webhook signature verification</td></tr>
+        <tr><td><code>/api/bookings/engine</code></td><td>Public API</td><td>No auth (public booking engine)</td></tr>
+        <tr><td><code>/dashboard/*</code></td><td>Authenticated</td><td>Cookie check → DB verify → RBAC</td></tr>
+        <tr><td><code>/api/*</code> (all other)</td><td>Authenticated API</td><td>Cookie check → 401 if missing</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Request Flow Through Security Layers</h4>
+    <div class="flow-diagram">
+      <div class="flow-step">HTTP Request</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Cloudflare SSL</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">Middleware: Cookie Check</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">Server: DB Session Verify</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">RBAC: Permission Check</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step highlight">RLS: Tenant Filter</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-step">Response</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h4>Static Asset Exclusions</h4>
+    <pre><code><span class="code-comment">// Middleware matcher — excludes static files from auth checks</span>
+<span class="code-keyword">matcher</span>: [<span class="code-string">'/((?!_next/static|_next/image|favicon.ico|.*\\.png|.*\\.svg).*)'</span>]</code></pre>
+    <ul>
+      <li><strong><code>_next/static</code></strong> — Webpack bundles, CSS</li>
+      <li><strong><code>_next/image</code></strong> — Optimized image pipeline</li>
+      <li><strong><code>*.png</code>, <code>*.svg</code></strong> — Public images and logos</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ======================== SECTION 9: ENCRYPTION ======================== -->
+<div class="container page-break">
+  <div class="section-number">Section 09</div>
+  <h2>Data Encryption & Hashing</h2>
+  <p class="section-description">
+    A summary of all cryptographic operations used across the platform, their algorithms,
+    and the data they protect.
+  </p>
+
+  <div class="section-card">
+    <h4>Encryption & Hashing Matrix</h4>
+    <table>
+      <thead>
+        <tr><th>Data</th><th>Algorithm</th><th>Strength</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>User Passwords</td>
+          <td>bcrypt</td>
+          <td>10 salt rounds (~100ms)</td>
+          <td>One-way hash — cannot be reversed</td>
+        </tr>
+        <tr>
+          <td>Session Tokens</td>
+          <td>SHA-256</td>
+          <td>256-bit digest</td>
+          <td>One-way hash for DB storage (plaintext in cookie only)</td>
+        </tr>
+        <tr>
+          <td>Session Token Generation</td>
+          <td>crypto.randomBytes</td>
+          <td>256-bit (32 bytes)</td>
+          <td>CSPRNG — cryptographically secure random</td>
+        </tr>
+        <tr>
+          <td>MFA TOTP Secrets</td>
+          <td>AES-256-GCM</td>
+          <td>256-bit key, 96-bit IV, auth tag</td>
+          <td>Reversible encryption — must decrypt for TOTP verify</td>
+        </tr>
+        <tr>
+          <td>Transport</td>
+          <td>TLS 1.3</td>
+          <td>Via Cloudflare</td>
+          <td>All data in transit is encrypted</td>
+        </tr>
+        <tr>
+          <td>Database Connection</td>
+          <td>SSL/TLS</td>
+          <td><code>sslmode=require</code></td>
+          <td>Encrypted connection to Neon PostgreSQL</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ======================== SECTION 10: AUDIT LOGS ======================== -->
+<div class="container">
+  <div class="section-number">Section 10</div>
+  <h2>Audit Logging</h2>
+  <p class="section-description">
+    Immutable audit trail records every significant action. Required for UAE regulatory
+    compliance and security incident investigation.
+  </p>
+
+  <div class="section-card">
+    <h4>Audit Log Record Structure</h4>
+    <table>
+      <thead>
+        <tr><th>Field</th><th>Example</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>action</code></td><td><code>create</code>, <code>update</code>, <code>delete</code>, <code>login</code></td><td>What was done</td></tr>
+        <tr><td><code>entityType</code></td><td><code>property</code>, <code>booking</code>, <code>journal_entry</code></td><td>Which entity type</td></tr>
+        <tr><td><code>entityId</code></td><td>UUID</td><td>Specific record affected</td></tr>
+        <tr><td><code>oldValues</code></td><td>JSON snapshot</td><td>State before the change</td></tr>
+        <tr><td><code>newValues</code></td><td>JSON snapshot</td><td>State after the change</td></tr>
+        <tr><td><code>userId</code></td><td>UUID</td><td>Who performed the action</td></tr>
+        <tr><td><code>ipAddress</code></td><td><code>185.x.x.x</code></td><td>Client IP (forensics)</td></tr>
+        <tr><td><code>userAgent</code></td><td>Browser string</td><td>Device identification</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-warning">
+      <span class="alert-icon">⚠</span>
+      <div><strong>Immutability:</strong> Audit log records are append-only. There is no <code>UPDATE</code> or <code>DELETE</code> API for audit logs. Older records are retained indefinitely for compliance.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== SECTION 11: COOKIES ======================== -->
+<div class="container page-break">
+  <div class="section-number">Section 11</div>
+  <h2>Cookie & Transport Security</h2>
+  <p class="section-description">
+    Session cookies are configured with defense-in-depth flags to prevent common web attacks.
+  </p>
+
+  <div class="section-card">
+    <h4>Cookie Configuration</h4>
+    <pre><code>response.cookies.<span class="code-function">set</span>(<span class="code-string">'session_id'</span>, sessionToken, {
+  <span class="code-keyword">httpOnly</span>: <span class="code-string">true</span>,      <span class="code-comment">// Cannot be read by JavaScript (XSS protection)</span>
+  <span class="code-keyword">secure</span>:   <span class="code-string">true</span>,      <span class="code-comment">// Only sent over HTTPS (production)</span>
+  <span class="code-keyword">sameSite</span>: <span class="code-string">'strict'</span>,  <span class="code-comment">// Not sent with cross-origin requests (CSRF protection)</span>
+  <span class="code-keyword">path</span>:     <span class="code-string">'/'</span>,       <span class="code-comment">// Available to all routes</span>
+  <span class="code-keyword">expires</span>:  expiresAt, <span class="code-comment">// 7-day expiration</span>
+});</code></pre>
+
+    <h4>Attack Mitigations</h4>
+    <table>
+      <thead>
+        <tr><th>Attack Vector</th><th>Mitigation</th><th>Flag</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Cross-Site Scripting (XSS)</td><td>Cookie invisible to <code>document.cookie</code></td><td><code>HttpOnly</code></td></tr>
+        <tr><td>Man-in-the-Middle (MitM)</td><td>Cookie only sent over HTTPS</td><td><code>Secure</code></td></tr>
+        <tr><td>Cross-Site Request Forgery (CSRF)</td><td>Cookie not sent with cross-origin requests</td><td><code>SameSite=Strict</code></td></tr>
+        <tr><td>Session Fixation</td><td>New token generated on every login</td><td>Token rotation</td></tr>
+        <tr><td>Database Breach</td><td>Only SHA-256 hash stored, not plaintext</td><td>Token hashing</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ======================== SECTION 12: ENVIRONMENTS ======================== -->
+<div class="container">
+  <div class="section-number">Section 12</div>
+  <h2>Environment Separation</h2>
+  <p class="section-description">
+    Strict environment separation ensures that development, staging, and production
+    are fully isolated with independent secrets and databases.
+  </p>
+
+  <div class="section-card">
+    <h4>Environment Configuration</h4>
+    <table>
+      <thead>
+        <tr><th>Variable</th><th>Purpose</th><th>Rotation</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>DATABASE_URL</code></td><td>PostgreSQL connection (SSL required)</td><td>Per environment</td></tr>
+        <tr><td><code>MFA_ENCRYPTION_KEY</code></td><td>AES-256 key for TOTP secrets</td><td>Never committed to VCS</td></tr>
+        <tr><td><code>WHATSAPP_API_TOKEN</code></td><td>Meta Business API token</td><td>Rotated quarterly</td></tr>
+        <tr><td><code>DOCUSIGN_INTEGRATION_KEY</code></td><td>DocuSign OAuth credentials</td><td>Per environment</td></tr>
+        <tr><td><code>SENTRY_DSN</code></td><td>Error monitoring endpoint</td><td>Per environment</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-danger">
+      <span class="alert-icon">🚨</span>
+      <div><strong>Critical Rule:</strong> <code>.env</code> files are listed in <code>.gitignore</code> and must NEVER be committed to version control. Production secrets are managed via the hosting provider's environment variable UI (Vercel / Cloudflare).</div>
+    </div>
+
+    <h4>Database Connection Security</h4>
+    <pre><code><span class="code-comment"># .env — SSL required for all database connections</span>
+DATABASE_URL=<span class="code-string">"postgresql://user:pass@host/db?sslmode=require&connect_timeout=15"</span></code></pre>
+  </div>
+
+  <div class="footer">
+    <p>Holiday Homes SaaS — Security Architecture Documentation v1.0</p>
+    <p>Classification: Internal — Confidential | Generated: May 31, 2026</p>
+    <p style="margin-top: 8px; color: var(--color-gold);">© 2026 Holiday Homes SaaS. All rights reserved.</p>
+  </div>
+</div>
+
+<!-- Print Button -->
+<button class="print-btn no-print" onclick="window.print()">📄 Save as PDF</button>
+
+</body>
+</html>

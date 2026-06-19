@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Properties & Maps Module Audit Report</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            
+            --primary: #8b5cf6;
+            --primary-light: #f5f3ff;
+            --primary-border: #ddd6fe;
+            
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --success-border: #a7f3d0;
+            
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --warning-border: #fde68a;
+            
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --danger-border: #fca5a5;
+            
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 40px 24px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* --- Header Section --- */
+        header {
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 2.25rem;
+            letter-spacing: -0.025em;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .meta-tag {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+        }
+
+        .report-badge {
+            background-color: var(--primary-light);
+            border: 1px solid var(--primary-border);
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* --- Stats Dashboard --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .stat-card.total::before { background-color: var(--primary); }
+        .stat-card.critical::before { background-color: var(--danger); }
+        .stat-card.warning::before { background-color: var(--warning); }
+        .stat-card.info::before { background-color: var(--success); }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        /* --- Executive Summary Card --- */
+        .summary-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 40px;
+        }
+
+        .summary-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .summary-text {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        /* --- Tabs & Section Navigation --- */
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-top: 48px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        /* --- Grid Lists --- */
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .file-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .file-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .file-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .file-path {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            font-family: monospace;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-block;
+        }
+
+        .badge-danger {
+            background-color: var(--danger-light);
+            border: 1px solid var(--danger-border);
+            color: var(--danger);
+        }
+
+        .badge-warning {
+            background-color: var(--warning-light);
+            border: 1px solid var(--warning-border);
+            color: var(--warning);
+        }
+
+        .badge-success {
+            background-color: var(--success-light);
+            border: 1px solid var(--success-border);
+            color: var(--success);
+        }
+
+        .badge-info {
+            background-color: var(--primary-light);
+            border: 1px solid var(--primary-border);
+            color: var(--primary);
+        }
+
+        .issue-counter {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* --- Tables --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: var(--text-primary);
+            font-weight: 600;
+            text-align: left;
+            padding: 16px;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 16px;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* --- Code Snippet Blocks --- */
+        .code-container {
+            margin-top: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .code-header {
+            background-color: #f1f5f9;
+            padding: 8px 16px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: monospace;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        /* --- Highlighted Cards --- */
+        .alert-card {
+            background-color: var(--danger-light);
+            border: 1px solid var(--danger-border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alert-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--danger);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alert-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Recommendations */
+        .rec-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .rec-item {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .rec-icon {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+            background-color: var(--primary-light);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid var(--primary-border);
+            text-align: center;
+        }
+
+        .rec-content h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .rec-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* PDF print overrides */
+        @media print {
+            body {
+                background-color: #ffffff;
+                padding: 0;
+            }
+            .container {
+                max-width: 100%;
+            }
+            .file-card, .stat-card, .summary-card, table, .rec-item {
+                box-shadow: none !important;
+                page-break-inside: avoid;
+            }
+            .file-grid {
+                grid-template-columns: 1fr;
+            }
+            pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <!-- HEADER -->
+        <header>
+            <div>
+                <span class="meta-tag">Static Code Analysis & Code Quality</span>
+                <h1>Properties & Maps Module Audit</h1>
+                <p class="subtitle">Comprehensive review of dead code, logic errors, and redundancies in holiday homes property listings & OSRM integration.</p>
+            </div>
+            <span class="report-badge">System Audit</span>
+        </header>
+
+        <!-- STATS DASHBOARD -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-label">Files Audited</div>
+                <div class="stat-value">8</div>
+            </div>
+            <div class="stat-card critical">
+                <div class="stat-label">Critical Issues</div>
+                <div class="stat-value">5</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-label">Warnings & Refactoring</div>
+                <div class="stat-value">18</div>
+            </div>
+            <div class="stat-card info">
+                <div class="stat-label">Clean Status Files</div>
+                <div class="stat-value">1</div>
+            </div>
+        </div>
+
+        <!-- EXECUTIVE SUMMARY -->
+        <div class="summary-card">
+            <h2 class="summary-title">Executive Summary</h2>
+            <p class="summary-text">
+                An audit of the <strong>Properties & Maps</strong> module was performed to identify quality defects, architectural issues, and redundant modules. The module houses core functionality for property listings, Excel/CSV property data imports, and Google Maps coordinate resolution used to run driving matrix computations for clean check-in schedulers.
+            </p>
+            <p class="summary-text" style="margin-bottom: 0;">
+                The review highlighted a **major code redundancy** in the Google Maps resolver module, where logic from <code style="color: var(--primary); font-weight: 600;">src/lib/maps.ts</code> was fully duplicated in the API route. Additionally, multiple instances of synchronous state setting inside React hooks (<code style="color: var(--danger); font-weight: 600;">useEffect</code>) in client-side files are present, which forces heavy cascading render passes. In the API routing, the route matrix API utilizes a public OSRM server without rate limits or fallback provisions, creating a clear production risk.
+            </p>
+        </div>
+
+        <!-- FILE BY FILE OVERVIEW -->
+        <h2 class="section-title">Module Files Overview</h2>
+        <div class="file-grid">
+            
+            <div class="file-card">
+                <div class="file-header">
+                    <span class="file-name">src/lib/maps.ts</span>
+                    <span class="badge badge-success">Clean</span>
+                </div>
+                <p class="file-path">Helper Library</p>
+                <p class="issue-counter">0 ESLint Issues</p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                    Implements core coordinate parsing and HTTP redirect tracing. Highly optimized and clean.
+                </p>
+            </div>
+
+            <div class="file-card">
+                <div class="file-header">
+                    <span class="file-name">resolve-maps-link/route.ts</span>
+                    <span class="badge badge-danger">Redundant</span>
+                </div>
+                <p class="file-path">API Route</p>
+                <p class="issue-counter">1 Lint Error | Severe Copy-Paste Duplication</p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                    Does not import helper functions; duplicates redirect tracing and regex coordinate parsing entirely.
+                </p>
+            </div>
+
+            <div class="file-card">
+                <div class="file-header">
+                    <span class="file-name">route-matrix/route.ts</span>
+                    <span class="badge badge-warning">High Risk</span>
+                </div>
+                <p class="file-path">API Route</p>
+                <p class="issue-counter">3 Lint Errors | Public Demo Server Risk</p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                    Integrates public demo instance of Open Source Routing Machine (OSRM) directly with zero SLA guarantees.
+                </p>
+            </div>
+
+            <div class="file-card">
+                <div class="file-header">
+                    <span class="file-name">properties/[id]/route.ts</span>
+                    <span class="badge badge-warning">Issues</span>
+                </div>
+                <p class="file-path">API Route</p>
+                <p class="issue-counter">12 Lint Errors | 1 Unused Variable</p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                    Hides compile warnings via <code style="font-size: 0.75rem;">// @ts-nocheck</code>. Duplicates contract dates parsing logic.
+                </p>
+            </div>
+
+            <div class="file-card">
+                <div class="file-header">
+                    <span class="file-name">properties/route.ts</span>
+                    <span class="badge badge-warning">Issues</span>
+                </div>
+                <p class="file-path">API Route</p>
+                <p class="issue-counter">11 Lint Errors | Redundant variables</p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                    Hides compile warnings via <code style="font-size: 0.75rem;">// @ts-nocheck</code>. Includes duplicate code for property contract evaluations.
+                </p>
+            </div>
+
+            <div class="file-card">
+                <div class="file-header">
+                    <span class="file-name">properties/import/route.ts</span>
+                    <span class="badge badge-warning">Issues</span>
+                </div>
+                <p class="file-path">API Route</p>
+                <p class="issue-counter">10 Lint Errors | Boilerplate Code</p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                    Main import file utilizing standard spreadsheet library. Heavily typed with <code style="font-size: 0.75rem;">any</code> keyword.
+                </p>
+            </div>
+
+            <div class="file-card">
+                <div class="file-header">
+                    <span class="file-name">properties/page.tsx</span>
+                    <span class="badge badge-danger">Performance Risks</span>
+                </div>
+                <p class="file-path">Dashboard List Component</p>
+                <p class="issue-counter">Multiple Unused Imports | 3 Cascading Renders</p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                    Hoisting/TDZ error on core load. Heavy performance leaks from synchronous hook updates.
+                </p>
+            </div>
+
+            <div class="file-card">
+                <div class="file-header">
+                    <span class="file-name">properties/[id]/page.tsx</span>
+                    <span class="badge badge-warning">Issues</span>
+                </div>
+                <p class="file-path">Dashboard Details Component</p>
+                <p class="issue-counter">Unused functions | 1 Cascading Render</p>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                    Includes redundant components and logic for auto-renew calculations. Unused router hooks.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- DETAILED CRITICAL AUDIT FINDINGS -->
+        <h2 class="section-title">Critical & Non-Working Risks</h2>
+
+        <!-- RISK 1: Cascading State Update -->
+        <div class="alert-card">
+            <div class="alert-title">
+                ⚠️ Cascading State Updates via Synchronous Effects (Performance Leak)
+            </div>
+            <div class="alert-desc">
+                In client pages <code style="font-weight: 600;">page.tsx</code> and <code style="font-weight: 600;">[id]/page.tsx</code>, state variables are updated synchronously inside <code style="font-weight: 600;">useEffect</code> bodies during initialization. This causes Next.js to trigger a second layout rendering cycle immediately after mounting, hurting application paint times.
+            </div>
+            <div class="code-container">
+                <div class="code-header">
+                    <span>src/app/dashboard/properties/[id]/page.tsx (Line 585)</span>
+                    <span>React Antipattern</span>
+                </div>
+                <pre><code>useEffect(() => {
+  try {
+    const saved = localStorage.getItem('hhs_custom_property_columns');
+    if (saved) setCustomColumns(JSON.parse(saved)); // Synchronous state trigger in effect
+  } catch (e) {
+    console.error('Failed to load custom columns', e);
+  }
+}, []);</code></pre>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                <strong>Impact:</strong> Renders visual flash effects and compromises overall rendering speeds. 
+                <br><strong>Resolution:</strong> Initialize state lazily instead: <code>const [customColumns, setCustomColumns] = useState(() => JSON.parse(localStorage.getItem('hhs_custom_property_columns') || '[]'))</code>.
+            </p>
+        </div>
+
+        <!-- RISK 2: Public Routing Server -->
+        <div class="alert-card" style="background-color: var(--warning-light); border-color: var(--warning-border);">
+            <div class="alert-title" style="color: var(--warning);">
+                ⚠️ Direct Dependence on Public Demo OSRM Server
+            </div>
+            <div class="alert-desc" style="color: var(--text-secondary);">
+                The distance matrix endpoint queries Project OSRM's public demo router instance. This server is not backed by an SLA and can fail, rate limit, or experience downtimes, directly disabling driving duration calculations for listing checks.
+            </div>
+            <div class="code-container">
+                <div class="code-header">
+                    <span>src/app/api/route-matrix/route.ts (Line 11)</span>
+                    <span>API Risk</span>
+                </div>
+                <pre><code>const coordString = coordinates.map(c => `${c.lng},${c.lat}`).join(';');
+const osrmUrl = `http://router.project-osrm.org/table/v1/driving/${coordString}?annotations=duration`;
+const res = await fetch(osrmUrl);</code></pre>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                <strong>Impact:</strong> High vulnerability to rate limiting (429 Status) and complete outage risk for driving time comparisons.
+                <br><strong>Resolution:</strong> Implement a fallback configuration or replace with an enterprise API (Google Maps Matrix API or a self-hosted OSRM container).
+            </p>
+        </div>
+
+        <!-- LOGIC ERRORS TABLE -->
+        <h2 class="section-title">Static Quality & Logic Deficiencies</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">File Location</th>
+                    <th style="width: 15%;">Issue Type</th>
+                    <th style="width: 60%;">Detailed Finding Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>properties/page.tsx</strong><br><small>Line 411</small></td>
+                    <td><span class="badge badge-danger">Logic Bug</span></td>
+                    <td>
+                        <strong>Temporal Dead Zone (TDZ):</strong> Calling <code>fetchProperties()</code> before its const declaration:
+                        <div class="code-container">
+                            <pre><code style="font-size: 0.75rem;">useEffect(() => { fetchProperties(); }, []); // Accessed before declaration
+const fetchProperties = async () => { ... } // Declared below</code></pre>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>properties/page.tsx</strong><br><small>Lines 226-227</small></td>
+                    <td><span class="badge badge-warning">SSR Risk</span></td>
+                    <td>
+                        <strong>window.Image Instantiation:</strong> Evaluates browser-only <code>window.Image</code> objects inside standard event handlers. During server builds, this risks execution crashes if code parsing evaluates server-side. Should wrap with a <code>typeof window !== 'undefined'</code> safety check.
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>properties/[id]/route.ts</strong><br><small>Line 479</small></td>
+                    <td><span class="badge badge-warning">Unused Variable</span></td>
+                    <td>
+                        <strong>Unused Destructured Field:</strong> <code>missingRequiredFields</code> is extracted on line 479 but is never referenced again in the scope, rendering the operation dead code:
+                        <pre style="margin-top: 4px; padding: 6px;"><code style="font-size: 0.75rem;">const { missingRequiredFields, ...rest } = currentExtra;</code></pre>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>properties/page.tsx</strong><br><small>Lines 149 & 280</small></td>
+                    <td><span class="badge badge-danger">React Hook</span></td>
+                    <td>
+                        <strong>Cascading Effect Triggers:</strong> Synchronous state settings of <code>setPicsList</code> and <code>setVisibleColumns</code> inside effects. Triggers unnecessary visual updates. Should compute values directly inline where state changes are initiated.
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Multiple files</strong><br><small>API Modules</small></td>
+                    <td><span class="badge badge-warning">TS Warning</span></td>
+                    <td>
+                        <strong>Bypassed Typing (ts-nocheck):</strong> Use of <code>// @ts-nocheck</code> in core API endpoints disables type checking completely, leading to extensive use of <code>any</code> and hiding compile bugs.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- REDUNDANT AND DUPLICATED CODE -->
+        <h2 class="section-title">Redundant & Copy-Pasted Code</h2>
+        
+        <div class="summary-card" style="border-left: 4px solid var(--warning);">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">
+                Identified Redundancies: resolve-maps-link API vs maps.ts Library
+            </h3>
+            <p class="summary-text" style="font-size: 0.9rem;">
+                The <code>resolve-maps-link/route.ts</code> file is completely redundant. Instead of importing utility functions from <code>src/lib/maps.ts</code>, the author has copy-pasted the entire parsing, regex expressions, and HTTP redirect resolution block directly inside the API handler.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <div class="code-header">Duplicate logic in resolve-maps-link/route.ts</div>
+                    <pre><code style="font-size: 0.75rem;">const parseUrlCoords = (u: string) => {
+  let m = u.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  m = u.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  ...
+  return null;
+};</code></pre>
+                </div>
+                <div>
+                    <div class="code-header">Original logic in src/lib/maps.ts</div>
+                    <pre><code style="font-size: 0.75rem;">export function parseCoordinatesFromLink(url: string) {
+  if (!url) return null;
+  let match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (match) return { lat: parseFloat(match[1]), ... };
+  ...
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-card" style="border-left: 4px solid var(--warning); margin-top: 24px;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">
+                Duplicate Contract Date Calculations
+            </h3>
+            <p class="summary-text" style="font-size: 0.9rem;">
+                The logic to extract the oldest contract start date is repeated line-for-line in the main list endpoint and the specific listing detail endpoint.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <div class="code-header">src/app/api/properties/route.ts</div>
+                    <pre><code style="font-size: 0.72rem;">let contractManagedSince = null;
+const allStartDates: string[] = [];
+if (Array.isArray(splits)) {
+  splits.forEach((split: any) => {
+    const splitContracts = split.contracts || [];
+    if (splitContracts.length > 0) {
+      splitContracts.forEach((c: any) => {
+        if (c.startDate) allStartDates.push(c.startDate);
+      });
+    }
+  });
+}</code></pre>
+                </div>
+                <div>
+                    <div class="code-header">src/app/api/properties/[id]/route.ts</div>
+                    <pre><code style="font-size: 0.72rem;">let contractManagedSince = null;
+const allStartDates: string[] = [];
+if (Array.isArray(splits)) {
+  splits.forEach((split: any) => {
+    const splitContracts = split.contracts || [];
+    if (splitContracts.length > 0) {
+      splitContracts.forEach((c: any) => {
+        if (c.startDate) allStartDates.push(c.startDate);
+      });
+    }
+  });
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- DEAD CODE & UNUSED IMPORTS -->
+        <h2 class="section-title">Dead Code & Unused Modules</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 30%;">File Source</th>
+                    <th style="width: 20%;">Variable / Import Name</th>
+                    <th style="width: 50%;">Refactoring Recommendation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>properties/page.tsx</strong></td>
+                    <td><code>MapPin</code>, <code>BadgePercent</code>, <code>FileSignature</code>, <code>LayoutGrid</code>, <code>List</code>, <code>ChevronRight</code>, <code>Bed</code>, <code>Bath</code>, <code>Users</code>, <code>Calendar</code>, <code>Home</code></td>
+                    <td>Unused Lucide-react icon imports. Delete from package imports on lines 7-11 to reduce bundle footprint.</td>
+                </tr>
+                <tr>
+                    <td><strong>properties/page.tsx</strong></td>
+                    <td><code>viewMode</code>, <code>setViewMode</code></td>
+                    <td>Unused react state variables and setters. Safe to remove entirely.</td>
+                </tr>
+                <tr>
+                    <td><strong>properties/page.tsx</strong></td>
+                    <td><code>customColumnsLoaded</code></td>
+                    <td>State variable declared on line 313 but never read in UI layers. Remove.</td>
+                </tr>
+                <tr>
+                    <td><strong>properties/[id]/page.tsx</strong></td>
+                    <td><code>Loader2</code></td>
+                    <td>Unused Lucide-react icon import. Safe to remove.</td>
+                </tr>
+                <tr>
+                    <td><strong>properties/[id]/page.tsx</strong></td>
+                    <td><code>router</code></td>
+                    <td>Unused router declaration from <code>next/navigation</code>. Remove to clean component boilerplate.</td>
+                </tr>
+                <tr>
+                    <td><strong>properties/[id]/page.tsx</strong></td>
+                    <td><code>getEffectiveContractTerm</code></td>
+                    <td>Calculation function defined on lines 189-226 but never executed. Safe to clean out.</td>
+                </tr>
+                <tr>
+                    <td><strong>properties/[id]/page.tsx</strong></td>
+                    <td><code>setGroupBy</code></td>
+                    <td>Prop callback function defined but unused in view parameters. Clean up reference hooks.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- ACTIONABLE RECOMMENDATIONS -->
+        <h2 class="section-title">Actionable Recommendations</h2>
+        <ul class="rec-list">
+            
+            <li class="rec-item">
+                <div class="rec-icon">1</div>
+                <div class="rec-content">
+                    <h4>Consolidate Google Maps Link Resolver</h4>
+                    <p>
+                        Remove the duplicate redirect checking and coordinate regex mapping from <code>src/app/api/resolve-maps-link/route.ts</code>. Refactor the API handler to import and call <code>resolveCoordinates</code> from <code>src/lib/maps.ts</code> directly.
+                    </p>
+                </div>
+            </li>
+
+            <li class="rec-item">
+                <div class="rec-icon">2</div>
+                <div class="rec-content">
+                    <h4>Fix Hoisting TDZ & React Effects</h4>
+                    <p>
+                        Move the declaration of <code>fetchProperties</code> to a line before the mounting <code>useEffect</code> block inside <code>properties/page.tsx</code> to resolve hoisting references. Also, initialize local storage-based states natively using state initializer functions: <code>useState(() => { ... })</code>, removing synchronous state triggers from effects.
+                    </p>
+                </div>
+            </li>
+
+            <li class="rec-item">
+                <div class="rec-icon">3</div>
+                <div class="rec-content">
+                    <h4>Secure OSRM Driving Matrix Route</h4>
+                    <p>
+                        Add error recovery or replace the public Project OSRM server with a self-hosted OSRM Docker container or transition the driving matrix calculations to Google Distance Matrix API with fallback configurations to handle offline operations cleanly.
+                    </p>
+                </div>
+            </li>
+
+            <li class="rec-item">
+                <div class="rec-icon">4</div>
+                <div class="rec-content">
+                    <h4>Cleanup Dead Imports & variables</h4>
+                    <p>
+                        Remove all unused icons, variables, and unused helper methods highlighted in the dead code section above to clear boilerplate weight and reduce package bundle footprints.
+                    </p>
+                </div>
+            </li>
+
+            <li class="rec-item">
+                <div class="rec-icon">5</div>
+                <div class="rec-content">
+                    <h4>Extract Shared Property Logic</h4>
+                    <p>
+                        Create a common property parsing utility (e.g. <code>src/lib/properties.ts</code>) to house the contract parsing and financial calculations, resolving the duplication between list and detail endpoints. Remove <code>// @ts-nocheck</code> flags and type using TypeScript contracts.
+                    </p>
+                </div>
+            </li>
+
+        </ul>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OMNIBetter - Authentication & Access Module Code Audit</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-card: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --color-primary: #6366f1;      /* Indigo */
+      --color-primary-light: #e0e7ff;
+      --color-success: #10b981;      /* Green */
+      --color-success-light: #d1fae5;
+      --color-warning: #f59e0b;      /* Amber */
+      --color-warning-light: #fef3c7;
+      --color-danger: #ef4444;       /* Red */
+      --color-danger-light: #fee2e2;
+      --border-color: #e2e8f0;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      margin: 0;
+      padding: 40px 24px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 28px;
+    }
+
+    .report-title-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .title-section h1 {
+      font-family: var(--font-heading);
+      font-size: 34px;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+      color: #1e293b;
+      letter-spacing: -0.03em;
+    }
+
+    .title-section h1 span {
+      color: var(--color-primary);
+    }
+
+    .title-section p {
+      color: var(--text-secondary);
+      font-size: 16px;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    .meta-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      display: flex;
+      gap: 32px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .meta-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .meta-value {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    /* Metrics Dashboard */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .stat-card.danger::before { background-color: var(--color-danger); }
+    .stat-card.warning::before { background-color: var(--color-warning); }
+    .stat-card.info::before { background-color: var(--color-primary); }
+    .stat-card.success::before { background-color: var(--color-success); }
+
+    .stat-val {
+      font-family: var(--font-heading);
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-card.danger .stat-val { color: var(--color-danger); }
+    .stat-card.warning .stat-val { color: var(--color-warning); }
+    .stat-card.info .stat-val { color: var(--color-primary); }
+    .stat-card.success .stat-val { color: var(--color-success); }
+
+    .stat-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Sections */
+    h2.section-title {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      color: #1e293b;
+      margin-top: 48px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    /* Summary Card */
+    .summary-card {
+      background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
+      border-radius: 16px;
+      padding: 32px;
+      color: #ffffff;
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.15);
+      margin-bottom: 40px;
+    }
+
+    .summary-card h3 {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      margin: 0 0 12px 0;
+      font-weight: 700;
+    }
+
+    .summary-card p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.7;
+      opacity: 0.9;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-card);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      border: 1px solid var(--border-color);
+      margin-bottom: 40px;
+    }
+
+    th, td {
+      padding: 16px 20px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f8fafc;
+      color: #475569;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tr:not(:last-child) td {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tr:hover td {
+      background-color: #f8fafc;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge.danger { background: var(--color-danger-light); color: var(--color-danger); }
+    .badge.warning { background: var(--color-warning-light); color: var(--color-warning); }
+    .badge.success { background: var(--color-success-light); color: var(--color-success); }
+    .badge.info { background: var(--color-primary-light); color: var(--color-primary); }
+
+    /* Findings List */
+    .findings-container {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .finding-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      padding: 28px;
+      position: relative;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .finding-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .finding-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 100%;
+      border-radius: 16px 0 0 16px;
+    }
+
+    .finding-card.danger::before { background-color: var(--color-danger); }
+    .finding-card.warning::before { background-color: var(--color-warning); }
+    .finding-card.info::before { background-color: var(--color-primary); }
+
+    .finding-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .finding-title-group h3 {
+      font-family: var(--font-heading);
+      font-size: 19px;
+      margin: 0 0 6px 0;
+      color: #1e293b;
+    }
+
+    .finding-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 20px;
+    }
+
+    .finding-meta span strong {
+      color: var(--text-secondary);
+    }
+
+    .finding-body {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .finding-body p {
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+
+    /* Code Snippets */
+    .snippet-container {
+      margin: 16px 0;
+    }
+
+    .code-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      background-color: #f1f5f9;
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      padding: 6px 16px;
+      border-radius: 8px 8px 0 0;
+      display: inline-block;
+      font-family: var(--font-body);
+    }
+
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 0 10px 10px 10px;
+      padding: 18px 24px;
+      font-family: 'Fira Code', 'Courier New', Courier, monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin: 0;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Recommendation Box */
+    .recommendation-box {
+      background-color: var(--color-primary-light);
+      border-left: 4px solid var(--color-primary);
+      border-radius: 4px 12px 12px 4px;
+      padding: 16px 20px;
+      margin-top: 20px;
+    }
+
+    .recommendation-box h4 {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      color: #4338ca;
+      margin: 0 0 6px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+
+    .recommendation-box p {
+      margin: 0;
+      font-size: 13.5px;
+      color: #312e81;
+    }
+
+    /* Remediation Checklist */
+    .remediation-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      margin-bottom: 40px;
+    }
+
+    .remediation-card h3 {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      margin: 0 0 18px 0;
+      color: #1e293b;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .checklist-item:last-child {
+      border-bottom: none;
+    }
+
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--color-primary);
+      border-radius: 4px;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    .checklist-text h4 {
+      margin: 0 0 4px 0;
+      font-size: 14.5px;
+      color: #1e293b;
+      font-weight: 600;
+    }
+
+    .checklist-text p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="report-title-container">
+        <div class="title-section">
+          <h1>Code Audit: <span>Authentication &amp; Access</span></h1>
+          <p>Structural validation, dead code scan, and vulnerability identification</p>
+        </div>
+        <div class="meta-box">
+          <div class="meta-item">
+            <span class="meta-label">Date Audited</span>
+            <span class="meta-value">June 15, 2026</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Module Scope</span>
+            <span class="meta-value">src/app (auth/invite), src/components/auth, src/lib/auth</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Platform Version</span>
+            <span class="meta-value">Next.js 16 (React 19)</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Executive Summary -->
+    <div class="summary-card">
+      <h3>Executive Summary</h3>
+      <p>
+        A comprehensive code audit was executed on the Authentication &amp; Access module. The module is structurally sound, featuring secure stateful session management, standard password hashing via bcryptjs, and database-backed MFA integration. However, several optimization and correctness opportunities were identified: a completely unused and redundant API route, a static spinner UI due to missing CSS keyframes, dangling invite tokens in standard registration pathways, and a global bypass of TypeScript compilation checks via <code>@ts-nocheck</code> in 12 separate source files.
+      </p>
+    </div>
+
+    <!-- Metrics Dashboard -->
+    <div class="dashboard-grid">
+      <div class="stat-card info">
+        <span class="stat-val">19</span>
+        <span class="stat-desc">Files Scanned</span>
+      </div>
+      <div class="stat-card danger">
+        <span class="stat-val">2</span>
+        <span class="stat-desc">Critical Issues</span>
+      </div>
+      <div class="stat-card warning">
+        <span class="stat-val">4</span>
+        <span class="stat-desc">Warning Gaps</span>
+      </div>
+      <div class="stat-card success">
+        <span class="stat-val">13</span>
+        <span class="stat-desc">Clean Components</span>
+      </div>
+    </div>
+
+    <!-- Scan Scope Table -->
+    <h2 class="section-title">Module Files &amp; Scan Status</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>File Path</th>
+          <th>Type</th>
+          <th>Size (Lines/Bytes)</th>
+          <th>Audit Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>src/app/login/page.tsx</code></td>
+          <td>Client Page</td>
+          <td>353 lines / 11,544 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/register/page.tsx</code></td>
+          <td>Client Page</td>
+          <td>179 lines / 6,067 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/invite/page.tsx</code></td>
+          <td>Client Page</td>
+          <td>294 lines / 9,967 B</td>
+          <td><span class="badge danger">Issues Found</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/api/auth/login/route.ts</code></td>
+          <td>API Route</td>
+          <td>149 lines / 4,532 B</td>
+          <td><span class="badge warning">Warning</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/api/auth/logout/route.ts</code></td>
+          <td>API Route</td>
+          <td>23 lines / 572 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/api/auth/mfa/disable/route.ts</code></td>
+          <td>API Route</td>
+          <td>62 lines / 1,733 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/api/auth/mfa/setup/route.ts</code></td>
+          <td>API Route</td>
+          <td>49 lines / 1,340 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/api/auth/mfa/verify/route.ts</code></td>
+          <td>API Route</td>
+          <td>75 lines / 2,198 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/api/auth/register/route.ts</code></td>
+          <td>API Route</td>
+          <td>376 lines / 15,686 B</td>
+          <td><span class="badge warning">Warning</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/api/auth/session/route.ts</code></td>
+          <td>API Route</td>
+          <td>50 lines / 1,469 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/api/auth/verify-password/route.ts</code></td>
+          <td>API Route</td>
+          <td>42 lines / 1,474 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/api/auth/verify-session/route.ts</code></td>
+          <td>API Route</td>
+          <td>21 lines / 592 B</td>
+          <td><span class="badge danger">Unused Endpoint</span></td>
+        </tr>
+        <tr>
+          <td><code>src/app/api/invite/validate/route.ts</code></td>
+          <td>API Route</td>
+          <td>61 lines / 1,857 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/components/auth/PermissionGate.tsx</code></td>
+          <td>React Component</td>
+          <td>27 lines / 651 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/lib/auth/getAuthSession.ts</code></td>
+          <td>Helper Lib</td>
+          <td>34 lines / 992 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/lib/auth/mfa.ts</code></td>
+          <td>Helper Lib</td>
+          <td>76 lines / 2,494 B</td>
+          <td><span class="badge warning">Warning</span></td>
+        </tr>
+        <tr>
+          <td><code>src/lib/auth/password.ts</code></td>
+          <td>Helper Lib</td>
+          <td>19 lines / 470 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/lib/auth/permissions.ts</code></td>
+          <td>Helper Lib</td>
+          <td>40 lines / 1,220 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+        <tr>
+          <td><code>src/lib/auth/session.ts</code></td>
+          <td>Helper Lib</td>
+          <td>229 lines / 6,600 B</td>
+          <td><span class="badge success">Clean</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Detailed Findings -->
+    <h2 class="section-title">Audit Findings &amp; Analysis</h2>
+    <div class="findings-container">
+
+      <!-- Finding 1: Unused Route -->
+      <div class="finding-card danger">
+        <div class="finding-header">
+          <div class="finding-title-group">
+            <h3>Obsolete Dead Endpoint: /api/auth/verify-session</h3>
+            <div class="finding-meta">
+              <span>Severity: <strong style="color:var(--color-danger)">Critical (Dead Code)</strong></span>
+              <span>Location: <code>src/app/api/auth/verify-session/route.ts</code></span>
+            </div>
+          </div>
+          <span class="badge danger">Obsolete</span>
+        </div>
+        <div class="finding-body">
+          <p>
+            The route handler <code>verify-session/route.ts</code> is completely redundant and represents dead code. The main application uses <code>/api/auth/session</code> (inside <code>AuthProvider.tsx</code>) to perform session verification and state recovery. <code>/api/auth/verify-session</code> is listed in the middleware public route configuration but is never called by any code.
+          </p>
+          <div class="snippet-container">
+            <div class="code-title">Obsolete Endpoint implementation</div>
+            <pre><code>// src/app/api/auth/verify-session/route.ts
+// This file can be safely deleted; its functionality is duplicate of `/api/auth/session/route.ts`
+export async function GET(request: NextRequest) {
+  const sessionToken = request.cookies.get('session_id')?.value;
+  if (!sessionToken) {
+    return NextResponse.json({ error: 'No session token' }, { status: 401 });
+  }
+  const sessionData = await verifySession(sessionToken);
+  if (!sessionData) {
+    return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+  }
+  return NextResponse.json(sessionData);
+}</code></pre>
+          </div>
+          <div class="recommendation-box">
+            <h4>Recommendation</h4>
+            <p>Delete <code>src/app/api/auth/verify-session/route.ts</code> entirely and remove its entry from the <code>src/middleware.ts</code> configurations to reduce code footprint and clean up security surfaces.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finding 2: Compile Errors / Missing React -->
+      <div class="finding-card danger">
+        <div class="finding-header">
+          <div class="finding-title-group">
+            <h3>TypeScript Compile Error in Client Component</h3>
+            <div class="finding-meta">
+              <span>Severity: <strong style="color:var(--color-danger)">Critical (Broken compilation)</strong></span>
+              <span>Location: <code>src/app/invite/page.tsx</code></span>
+            </div>
+          </div>
+          <span class="badge danger">Compile Error</span>
+        </div>
+        <div class="finding-body">
+          <p>
+            At line 42, <code>handleSubmit</code> references <code>React.FormEvent</code>. However, <code>React</code> itself is not imported on line 3 (only <code>{ useEffect, useState, Suspense }</code> are imported). In strict TypeScript configurations, this triggers a compiler error: <code>Cannot find name 'React'</code>.
+          </p>
+          <div class="snippet-container">
+            <div class="code-title">Missing import and usage</div>
+            <pre><code>// Line 3
+import { useEffect, useState, Suspense } from 'react'; // Missing default 'React' import
+
+// Line 42
+const handleSubmit = async (e: React.FormEvent) => { // &lt;-- Throws: Cannot find name 'React'
+  e.preventDefault();
+  // ...
+}</code></pre>
+          </div>
+          <div class="recommendation-box">
+            <h4>Recommendation</h4>
+            <p>Add <code>import React, { useEffect, useState, Suspense } from 'react';</code> or import <code>FormEvent</code> directly and define the type signature as <code>e: FormEvent</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finding 3: Dangling Tokens -->
+      <div class="finding-card warning">
+        <div class="finding-header">
+          <div class="finding-title-group">
+            <h3>Dangling Invite Tokens after Email-Based Registration</h3>
+            <div class="finding-meta">
+              <span>Severity: <strong style="color:var(--color-warning)">Warning (Logic Gap)</strong></span>
+              <span>Location: <code>src/app/api/auth/register/route.ts</code></span>
+            </div>
+          </div>
+          <span class="badge warning">Logic Gap</span>
+        </div>
+        <div class="finding-body">
+          <p>
+            In the registration API, a user can sign up via two branches: <code>Branch A</code> (via token-based link) and <code>Branch B</code> (via business email matching a pending database user). In <code>Branch A</code>, the database transaction correctly clears the token state: <code>inviteToken: null, inviteTokenExpiry: null</code>. However, in <code>Branch B</code>, these fields are not updated.
+          </p>
+          <div class="snippet-container">
+            <div class="code-title">Branch B Transaction Logic</div>
+            <pre><code>// src/app/api/auth/register/route.ts - Branch B (Line 110)
+const updatedUser = await tx.user.update({
+  where: { id: existingUser.id },
+  data: {
+    passwordHash: hashedPassword,
+    firstName,
+    lastName,
+    // Gap: inviteToken and inviteTokenExpiry are not cleared!
+  },
+});</code></pre>
+          </div>
+          <div class="recommendation-box">
+            <h4>Recommendation</h4>
+            <p>Update <code>Branch B</code>'s user update transaction to clear the invite token fields:</p>
+            <pre><code>data: {
+  passwordHash: hashedPassword,
+  firstName,
+  lastName,
+  inviteToken: null,
+  inviteTokenExpiry: null,
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finding 4: Keyframe CSS -->
+      <div class="finding-card warning">
+        <div class="finding-header">
+          <div class="finding-title-group">
+            <h3>Broken CSS Animation Keyframes for Page Spinner</h3>
+            <div class="finding-meta">
+              <span>Severity: <strong style="color:var(--color-warning)">Warning (UI Bug)</strong></span>
+              <span>Location: <code>src/app/invite/page.tsx</code></span>
+            </div>
+          </div>
+          <span class="badge warning">UI Glitch</span>
+        </div>
+        <div class="finding-body">
+          <p>
+            The loader element on the invite validation page uses a spinner style configured with <code>animation: 'spin 0.8s linear infinite'</code>. However, there are no keyframes declared for <code>spin</code> anywhere in the inline CSS record. As a result, the spinner is statically rendered and does not rotate.
+          </p>
+          <div class="snippet-container">
+            <div class="code-title">Styles definition (Line 272)</div>
+            <pre><code>spinner: {
+  width: 36,
+  height: 36,
+  border: '3px solid #e8eaf6',
+  borderTop: '3px solid #667eea',
+  borderRadius: '50%',
+  animation: 'spin 0.8s linear infinite', // Keyframes not declared
+  margin: '0 auto',
+}</code></pre>
+          </div>
+          <div class="recommendation-box">
+            <h4>Recommendation</h4>
+            <p>Since React inline styles do not support keyframes directly, inject keyframes through a global layout stylesheet or add a <code>&lt;style&gt;</code> block to the React structure that declares the keyframes:</p>
+            <pre><code>@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finding 5: ts-nocheck Bypasses -->
+      <div class="finding-card warning">
+        <div class="finding-header">
+          <div class="finding-title-group">
+            <h3>Global TypeScript Compiling Bypass (@ts-nocheck)</h3>
+            <div class="finding-meta">
+              <span>Severity: <strong style="color:var(--color-warning)">Warning (Code Quality)</strong></span>
+              <span>Location: 12 Module Files</span>
+            </div>
+          </div>
+          <span class="badge warning">Quality</span>
+        </div>
+        <div class="finding-body">
+          <p>
+            Critical files in the Authentication module (including routes, hashing utilities, and session handlers) start with <code>// @ts-nocheck</code>. This bypasses compile-time verification globally, masking implicit <code>any</code> errors, potential type bugs, and breaking changes.
+          </p>
+          <div class="recommendation-box">
+            <h4>Recommendation</h4>
+            <p>Incrementally remove the <code>// @ts-nocheck</code> annotations, fix the underlying type mappings, and enforce strict type safety checks to ensure code reliability across environments.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finding 6: Configuration Fallback Key -->
+      <div class="finding-card warning">
+        <div class="finding-header">
+          <div class="finding-title-group">
+            <h3>Fallback Key in Production MFA Encryption</h3>
+            <div class="finding-meta">
+              <span>Severity: <strong style="color:var(--color-warning)">Warning (Security Vulnerability)</strong></span>
+              <span>Location: <code>src/lib/auth/mfa.ts</code></span>
+            </div>
+          </div>
+          <span class="badge warning">Security</span>
+        </div>
+        <div class="finding-body">
+          <p>
+            The encryption key utilized for AES-256-GCM secret hashing defaults to a fallback string: <code>'default-fallback-key-must-be-changed-in-prod-environments'</code>. In environments where the variable is unset or missing, it will silently encrypt secrets with a guessable key, leaving customer data vulnerable.
+          </p>
+          <div class="snippet-container">
+            <div class="code-title">Vulnerable Configuration (Line 6)</div>
+            <pre><code>const ENCRYPTION_KEY = process.env.MFA_ENCRYPTION_KEY || 'default-fallback-key-must-be-changed-in-prod-environments';</code></pre>
+          </div>
+          <div class="recommendation-box">
+            <h4>Recommendation</h4>
+            <p>Ensure that an environment variable check throws a configuration error if <code>MFA_ENCRYPTION_KEY</code> is missing during startup or compilation in production environments, rather than falling back to a plain text string.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Remediation Checklist -->
+    <h2 class="section-title" style="margin-top: 60px;">Remediation Plan</h2>
+    <div class="remediation-card">
+      <h3>Priority Action Checklist</h3>
+      
+      <div class="checklist-item">
+        <div class="checkbox"></div>
+        <div class="checklist-text">
+          <h4>Delete Unused verify-session API Handler</h4>
+          <p>Remove <code>src/app/api/auth/verify-session/route.ts</code> and clear the reference in <code>src/middleware.ts</code>.</p>
+        </div>
+      </div>
+
+      <div class="checklist-item">
+        <div class="checkbox"></div>
+        <div class="checklist-text">
+          <h4>Resolve Typescript Compiler Issue in Invite Page</h4>
+          <p>Add <code>import React</code> or directly import <code>FormEvent</code> in <code>src/app/invite/page.tsx</code>.</p>
+        </div>
+      </div>
+
+      <div class="checklist-item">
+        <div class="checkbox"></div>
+        <div class="checklist-text">
+          <h4>Clear Invite Tokens in Branch B of Register Endpoint</h4>
+          <p>Update user update query in <code>src/app/api/auth/register/route.ts</code> to null out <code>inviteToken</code> and <code>inviteTokenExpiry</code>.</p>
+        </div>
+      </div>
+
+      <div class="checklist-item">
+        <div class="checkbox"></div>
+        <div class="checklist-text">
+          <h4>Implement CSS keyframes for Page Spinner</h4>
+          <p>Inject <code>@keyframes spin</code> in the <code>src/app/invite/page.tsx</code> layout context.</p>
+        </div>
+      </div>
+
+      <div class="checklist-item">
+        <div class="checkbox"></div>
+        <div class="checklist-text">
+          <h4>Disable Fallback MFA Encryption Key</h4>
+          <p>Enforce a check that crashes/stops server startup if <code>process.env.MFA_ENCRYPTION_KEY</code> is undefined in production.</p>
+        </div>
+      </div>
+
+      <div class="checklist-item">
+        <div class="checkbox"></div>
+        <div class="checklist-text">
+          <h4>Remove ts-nocheck and strict-type Auth module</h4>
+          <p>Remove the <code>// @ts-nocheck</code> directives and resolve typescript compiler issues throughout the auth folder.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
